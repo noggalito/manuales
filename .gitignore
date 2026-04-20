@@ -1,0 +1,60 @@
+# OS / Editor / IDE
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.code-workspace
+
+.vscode/
+.idea/
+*.iml
+
+# Build outputs (generados)
+# se ignora el contenido, pero se mantiene .gitkeep
+build/*
+!build/.gitkeep
+
+dist/*
+!dist/.gitkeep
+
+reports/*
+!reports/.gitkeep
+
+# Entregables sueltos (por si alguien genera fuera de dist/)
+*.epub
+*.kpf
+*.mobi
+*.azw
+*.azw3
+
+
+# Python (toolchain)
+__pycache__/
+*.py[cod]
+*.pyo
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+.venv/
+venv/
+ENV/
+env/
+
+pip-wheel-metadata/
+*.egg-info/
+.eggs/
+
+# Secrets / env
+.env
+.env.*
+*.key
+*.pem
+
+# Misc
+*.log
+
+# Prompt
+prompt.txt
