@@ -1,0 +1,32 @@
+# Plantilla de /etc/hosts v1.0
+# Se requiere definir $MIHOST
+# Sintaxis: IP  nombre-canónico  [alias ...]
+
+# ── Loopback IPv4 ──────────────────────────────────────────
+127.0.0.1       localhost $MIHOST
+
+# ── Loopback IPv6 ──────────────────────────────────────────
+::1             localhost ip6-localhost ip6-loopback
+
+# ── Multicast y link-local IPv6 (Debian/Ubuntu por defecto) ─
+fe00::0         ip6-localnet
+ff00::0         ip6-mcastprefix
+ff02::1         ip6-allnodes
+ff02::2         ip6-allrouters
+ff02::3         ip6-allhosts
+
+# ── Nombre del equipo (FQDN primero, luego hostname corto) ──
+127.0.1.1       $MIHOST.lan  $MIHOST
+# <192.168.1.2> <FQDN> <HOSTNAME> [alias1] [alias2 ...]
+
+# ── Hosts de red local ──────────────────────────────────────
+# 192.168.1.1     router.lan        router
+# 192.168.1.10    nas.lan           nas
+# 192.168.1.50    impresora.lan
+
+# ── Servicios locales / desarrollo ──────────────────────────
+# 127.0.0.1       odoo.local
+# 127.0.0.1       git.local
+
+# ── Bloqueo de dominios (redirigir a 0.0.0.0) ───────────────
+# 0.0.0.0         ads.ejemplo.com
