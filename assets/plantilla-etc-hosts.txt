@@ -1,5 +1,5 @@
 # Plantilla de /etc/hosts v1.0
-# Se requiere definir $MIHOST
+# Se requiere definir la variable MIHOST
 # Sintaxis: IP  nombre-canónico  [alias ...]
 
 # ── Loopback IPv4 ──────────────────────────────────────────
