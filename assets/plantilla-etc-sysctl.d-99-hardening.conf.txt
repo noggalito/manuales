@@ -1,0 +1,41 @@
+# Plantilla de /etc/sysctl.d/99-hardening.conf v1.0
+# Hardening de kernel y red
+
+# === RED ===
+
+# Filtrado de paquetes de origen falsificado (anti-spoofing)
+# Aceptar paquetes solo si la ruta de retorno coincide con la interfaz de entrada
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+
+# SYN cookies — protección contra inundación SYN
+net.ipv4.tcp_syncookies = 1
+
+# Ignorar pings broadcast (evita ser amplificador en ataques smurf)
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+
+# Ignorar respuestas ICMP malformadas
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+
+# No aceptar redirects ICMP (un atacante en el mismo segmento podría redirigir tráfico)
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# No enviar redirects (este servidor no es router)
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+# No aceptar paquetes con source routing
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv6.conf.all.accept_source_route = 0
+net.ipv6.conf.default.accept_source_route = 0
+
+# Loguear paquetes con direcciones marcianas (improbables/spoof)
+net.ipv4.conf.all.log_martians = 1
+net.ipv4.conf.default.log_martians = 1
+
+# Endurecer TIME_WAIT y handshake
+net.ipv4.tcp_rfc1337 = 1
