@@ -1,0 +1,28 @@
+# Plantilla de /etc/fail2ban/jail.local v1.0
+# Se requiere definir la variable MIHOST
+
+[DEFAULT]
+# Tiempo de baneo: 1 hora (3600 s) en primer ban, escala con bantime.increment
+bantime = 1h
+findtime = 10m
+maxretry = 5
+
+# Aumentar la duración del ban exponencialmente para atacantes reincidentes
+bantime.increment = true
+bantime.factor = 2
+bantime.maxtime = 1w
+
+# Backend moderno: lee del journal de systemd
+backend = systemd
+
+# Acción por defecto (nftables en Debian 13)
+banaction = nftables-multiport
+banaction_allports = nftables-allports
+
+# Redes ignoradas (nunca se banean)
+ignoreip = 127.0.0.1/8 ::1
+
+[sshd]
+enabled = true
+port    = $MIPUERTO
+mode    = aggressive
