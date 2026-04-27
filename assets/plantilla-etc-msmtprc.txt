@@ -1,0 +1,48 @@
+# Plantilla de /etc/msmtprc v1.0
+# Variables que se sustituyen al desplegar:
+#   MIRELAY        - hostname del servidor SMTP de salida (ej. smtp.relay.example.com)
+#   MIPUERTO       - puerto SMTP (587 STARTTLS / 465 TLS implícito)
+#   MIUSUARIO_SMTP - usuario para autenticarse contra el relay
+#   MIFROM         - dirección "From" autorizada en el relay
+#
+# La contraseña se lee desde /etc/msmtp/password (no debe estar en este archivo).
+
+# Defaults aplicados a todas las cuentas
+defaults
+auth            on
+tls             on
+tls_starttls    on
+tls_trust_file  /etc/ssl/certs/ca-certificates.crt
+tls_certcheck   on
+logfile         /var/log/msmtp.log
+syslog          on
+timeout         30
+
+# Cuenta principal (relay corporativo)
+account default
+host            $MIRELAY
+port            $MIPUERTO
+from            $MIFROM
+user            $MIUSUARIO_SMTP
+passwordeval    "cat /etc/msmtp/password"
+
+# Notas:
+# - Si el relay usa TLS implícito (puerto 465 en lugar de 587 con STARTTLS),
+#   reemplazar las dos líneas:
+#       tls             on
+#       tls_starttls    on
+#   por:
+#       tls             on
+#       tls_starttls    off
+#
+# - Para depurar problemas de envío, añadir temporalmente:
+#       set_from_header  on
+#       set_date_header  on
+#   y revisar /var/log/msmtp.log tras un envío de prueba.
+#
+# - Para usar autenticación XOAUTH2 (Gmail/Workspace/Office365 modernos),
+#   reemplazar `passwordeval` por:
+#       auth            xoauth2
+#       passwordeval    "/usr/local/bin/oauth2-helper-script"
+#   donde el script genera un token OAuth2 fresco. Esto requiere registro
+#   de aplicación en el proveedor y queda fuera del alcance del manual base.
