@@ -39,3 +39,35 @@ net.ipv4.conf.default.log_martians = 1
 
 # Endurecer TIME_WAIT y handshake
 net.ipv4.tcp_rfc1337 = 1
+
+# === KERNEL ===
+
+# ASLR completo (Address Space Layout Randomization)
+kernel.randomize_va_space = 2
+
+# Restringir el acceso a punteros del kernel para usuarios no privilegiados
+# (mitiga clases enteras de exploits que necesitan conocer direcciones del kernel)
+kernel.kptr_restrict = 2
+
+# Restringir dmesg a usuarios privilegiados
+kernel.dmesg_restrict = 1
+
+# Restringir ptrace al ámbito padre/hijo (impide a un proceso atacar a otro
+# del mismo usuario que no sea su hijo)
+kernel.yama.ptrace_scope = 1
+
+# Limitar la información expuesta en /proc/<pid>/ a procesos del propio usuario
+# (en sistemas multiusuario; en servidor con un solo admin tiene poco efecto pero no hace daño)
+kernel.perf_event_paranoid = 3
+
+# Deshabilitar SysRq remoto (el "magic SysRq key" puede causar reboot, sync, kill all)
+kernel.sysrq = 0
+
+# Crashes de aplicaciones SUID no se vuelcan a disco (evita exposición de datos sensibles)
+fs.suid_dumpable = 0
+
+# Restringir hardlinks y symlinks (mitiga ataques TOCTOU clásicos en /tmp)
+fs.protected_hardlinks = 1
+fs.protected_symlinks = 1
+fs.protected_fifos = 2
+fs.protected_regular = 2
