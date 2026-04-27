@@ -1,0 +1,33 @@
+# # Plantilla de /etc/audit/rules.d/99-hardening.rules v1.0
+# Reglas mínimas de auditoría
+
+# Eliminar reglas previas al cargar este archivo
+-D
+
+# Buffer de eventos (mayor = menos pérdidas bajo carga)
+-b 8192
+
+# === Identidad y privilegios ===
+-w /etc/passwd       -p wa -k identidad
+-w /etc/shadow       -p wa -k identidad
+-w /etc/group        -p wa -k identidad
+-w /etc/gshadow      -p wa -k identidad
+-w /etc/sudoers      -p wa -k privilegios
+-w /etc/sudoers.d/   -p wa -k privilegios
+
+# === SSH ===
+-w /etc/ssh/sshd_config       -p wa -k ssh
+-w /etc/ssh/sshd_config.d/    -p wa -k ssh
+
+# === Configuración crítica ===
+-w /etc/hosts        -p wa -k red
+-w /etc/resolv.conf  -p wa -k red
+-w /etc/sysctl.conf  -p wa -k sysctl
+-w /etc/sysctl.d/    -p wa -k sysctl
+
+# === Escalada de privilegios ===
+-a always,exit -F arch=b64 -S execve -F euid=0 -F auid>=1000 -F auid!=4294967295 -k root_exec
+-a always,exit -F arch=b32 -S execve -F euid=0 -F auid>=1000 -F auid!=4294967295 -k root_exec
+
+# Hacer las reglas inmutables hasta el próximo reboot (deja como última línea)
+-e 2
