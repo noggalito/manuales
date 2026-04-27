@@ -17,8 +17,7 @@ done < <(df -h --output=source,size,used,avail,pcent,target | tail -n +2 | grep 
 # Carga del sistema (1 min) sobre 4x el número de CPUs
 load1=$(awk '{print $1}' /proc/loadavg)
 cpus=$(nproc)
-threshold=$(echo "$cpus * 4" | bc)
-if [ "$(echo "$load1 > $threshold" | bc)" -eq 1 ]; then
+if awk -v l="$load1" -v c="$cpus" 'BEGIN { exit !(l > c*4) }'; then
     ALERTS="${ALERTS}Carga 1min: ${load1} (umbral: ${threshold}).\n"
 fi
 
