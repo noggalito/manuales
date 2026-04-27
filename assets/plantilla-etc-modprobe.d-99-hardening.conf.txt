@@ -1,0 +1,21 @@
+# Plantilla de /etc/modprobe.d/99-hardening.conf v1.0
+
+# Buses y dispositivos que no se usan en servidores
+install firewire-core /bin/true
+install firewire-ohci /bin/true
+install firewire-sbp2 /bin/true
+install thunderbolt /bin/true
+
+# Filesystems exóticos (mitigación contra montaje de USB con FS hostil)
+install cramfs /bin/true
+install freevxfs /bin/true
+install jffs2 /bin/true
+install hfs /bin/true
+install hfsplus /bin/true
+install udf /bin/true
+
+# Protocolos de red poco usados (DCCP, SCTP, RDS, TIPC)
+install dccp /bin/true
+install sctp /bin/true
+install rds /bin/true
+install tipc /bin/true
