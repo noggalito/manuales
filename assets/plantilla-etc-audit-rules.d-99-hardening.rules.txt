@@ -1,4 +1,4 @@
-# # Plantilla de /etc/audit/rules.d/99-hardening.rules v1.0
+# Plantilla de /etc/audit/rules.d/99-hardening.rules v1.0
 # Reglas mínimas de auditoría
 
 # Eliminar reglas previas al cargar este archivo

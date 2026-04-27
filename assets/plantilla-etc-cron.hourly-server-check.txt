@@ -1,0 +1,47 @@
+#!/bin/bash
+# Plantilla de /etc/cron.hourly/server-check v1.0
+# Chequeos básicos del servidor. Envía correo a root si algo falla.
+
+set -u
+ALERTS=""
+
+# Disco lleno (más del 85%)
+while read -r line; do
+    use=$(echo "$line" | awk '{print $5}' | tr -d '%')
+    fs=$(echo "$line" | awk '{print $6}')
+    if [ "$use" -ge 85 ] 2>/dev/null; then
+        ALERTS="${ALERTS}Disco ${fs} al ${use}% de uso.\n"
+    fi
+done < <(df -h --output=source,size,used,avail,pcent,target | tail -n +2 | grep -v tmpfs)
+
+# Carga del sistema (1 min) sobre 4x el número de CPUs
+load1=$(awk '{print $1}' /proc/loadavg)
+cpus=$(nproc)
+threshold=$(echo "$cpus * 4" | bc)
+if [ "$(echo "$load1 > $threshold" | bc)" -eq 1 ]; then
+    ALERTS="${ALERTS}Carga 1min: ${load1} (umbral: ${threshold}).\n"
+fi
+
+# Memoria libre menor a 100 MB
+freemem=$(free -m | awk '/^Mem:/ {print $7}')
+if [ "$freemem" -lt 100 ]; then
+    ALERTS="${ALERTS}Memoria disponible: ${freemem} MB.\n"
+fi
+
+# Servicios críticos caídos
+for svc in ssh chrony fail2ban; do
+    if ! systemctl is-active --quiet "$svc"; then
+        ALERTS="${ALERTS}Servicio ${svc} no está activo.\n"
+    fi
+done
+
+# Reinicio pendiente sin aplicar
+if [ -f /var/run/reboot-required ]; then
+    pkgs=$(cat /var/run/reboot-required.pkgs 2>/dev/null | tr '\n' ' ')
+    ALERTS="${ALERTS}Reinicio pendiente. Paquetes: ${pkgs}\n"
+fi
+
+# Si hay alertas, enviar correo
+if [ -n "$ALERTS" ]; then
+    printf "Alertas en $(hostname) a $(date):\n\n%b" "$ALERTS" | mail -s "[ALERT] $(hostname)" root
+fi
