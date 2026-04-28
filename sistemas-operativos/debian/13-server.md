@@ -19,7 +19,6 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 
 * Nuevo manual de reenvío de logs a un servidor central con `systemd-journal-upload` y `systemd-journal-remote`
 * Más precisión y profundidad en el uso de `borg` para respaldos
-* Footer de licencia
 
 ## c. Requerimientos previos
 
@@ -4287,4 +4286,4 @@ Aunque los permisos de `/var/log/msmtp.log` sean correctos, msmtp puede mostrar 
 
 ---
 
-<a href="https://github.com/noggalito/manuales/blob/main/ssh-ed25519.md">Despliegue de Debian 13.4 Trixie server</a> © 2026 by <a href="https://github.com/calu777">Calú</a> is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
+<a href="https://github.com/noggalito/manuales/blob/main/sistemas-operativos/debian/13-server.md">Despliegue de Debian 13 Trixie server</a> © 2026 by <a href="https://github.com/calu777">Calú</a> is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
