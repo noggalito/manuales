@@ -6,6 +6,7 @@
 #   MIFROM         - dirección "From" autorizada en el relay
 #
 # La contraseña se lee desde /etc/msmtp/password (no debe estar en este archivo).
+# Los aliases (root → dirección externa) se leen de /etc/msmtp/aliases.
 
 # Defaults aplicados a todas las cuentas
 defaults
@@ -17,8 +18,9 @@ tls_certcheck   on
 # logfile         /var/log/msmtp.log    # deshabilitado: usar syslog/journald
 syslog          on
 timeout         30
+aliases         /etc/msmtp/aliases
 
-# Cuenta principal (relay corporativo)
+# Cuenta principal (relay corporativo o Gmail con app password)
 account default
 host            $MIRELAY
 port            $MIPUERTO
@@ -35,10 +37,27 @@ passwordeval    "cat /etc/msmtp/password"
 #       tls             on
 #       tls_starttls    off
 #
-# - Para depurar problemas de envío, revisar los logs en journald:
+# - Para revisar logs de envío:
 #       sudo journalctl -t msmtp -n 50
-#   Para depuración más detallada, ejecutar manualmente con --debug:
-#       echo "Subject: test\n\ncuerpo" | msmtp --debug -f origen@dominio.com destino@dominio.com
+#
+# - Para depurar problemas con detalle, ejecutar manualmente con --debug:
+#       echo "Subject: test
+#
+#       cuerpo" | msmtp --debug -f origen@dominio.com destino@dominio.com
+#
+# - Si por alguna razón se prefiere log en archivo dedicado (no recomendado
+#   en el manual base), descomentar la línea `logfile` arriba y crear el
+#   archivo con permisos compatibles:
+#       sudo install -o root -g msmtp -m 0660 /dev/null /var/log/msmtp.log
+#   Atención: aun con permisos correctos, msmtp puede mostrar warnings
+#   "cannot log" al ser invocado desde usuarios no-root vía sendmail.
+#   Ver Anexo F.13 del manual.
+#
+# - Para Gmail con app password:
+#       host            smtp.gmail.com
+#       port            587
+#       Requiere 2FA activado y generar app password en
+#       https://myaccount.google.com/apppasswords
 #
 # - Para usar autenticación XOAUTH2 (Gmail/Workspace/Office365 modernos),
 #   reemplazar `passwordeval` por:
