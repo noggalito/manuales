@@ -14,7 +14,7 @@ tls             on
 tls_starttls    on
 tls_trust_file  /etc/ssl/certs/ca-certificates.crt
 tls_certcheck   on
-logfile         /var/log/msmtp.log
+# logfile         /var/log/msmtp.log    # deshabilitado: usar syslog/journald
 syslog          on
 timeout         30
 
@@ -35,10 +35,10 @@ passwordeval    "cat /etc/msmtp/password"
 #       tls             on
 #       tls_starttls    off
 #
-# - Para depurar problemas de envío, añadir temporalmente:
-#       set_from_header  on
-#       set_date_header  on
-#   y revisar /var/log/msmtp.log tras un envío de prueba.
+# - Para depurar problemas de envío, revisar los logs en journald:
+#       sudo journalctl -t msmtp -n 50
+#   Para depuración más detallada, ejecutar manualmente con --debug:
+#       echo "Subject: test\n\ncuerpo" | msmtp --debug -f origen@dominio.com destino@dominio.com
 #
 # - Para usar autenticación XOAUTH2 (Gmail/Workspace/Office365 modernos),
 #   reemplazar `passwordeval` por:
