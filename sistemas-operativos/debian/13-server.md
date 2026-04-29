@@ -5,14 +5,14 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 <p style="text-align: center"><img src="./assets/logo debian.png" style="width: 25%;" alt="Debian" /></p>
 
 
-**Autor:** Calú  
+**Autor:** [Calú](https://github.com/calu777) 
 **Fecha de inicio:** 2026-04-19  
 **Última actualización:** 2026-04-28  
 **Versión:** v0.1   
 
 ## a.  Historial de cambios
 
-* v0.1 – 2026-04-28 – Manual termiando para la versión 13.4.0 de Debian
+* v0.1 – 2026-04-28 – Manual terminado para la versión 13.4.0 de Debian
 
 
 ## b. To-do
@@ -23,6 +23,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 ## c. Requerimientos previos
 
 * Llave SSH Ed25519 para el punto "4.2 Copia de la llave pública del administrador". Manual para generarla disponible [aquí](https://github.com/noggalito/manuales/blob/main/ssh-ed25519.md)
+* Una cuenta de correo electrónico (a veces con coontraseña por aplicación) desde donde se enviarán las notificaciones del servidor
 
 ---
 
@@ -2283,7 +2284,7 @@ ls -la /etc/cron.daily/ | grep -i aide
 sudo cat /etc/default/aide
 ```
 
-Para activar el check diario automático, asegurar de tener en `/etc/default/aide`:
+Para activar el check diario automático, asegurarse de tener en `/etc/default/aide`:
 
 ```bash
 sudo sed -i 's|^CRON_DAILY_RUN=.*|CRON_DAILY_RUN=yes|' /etc/default/aide
