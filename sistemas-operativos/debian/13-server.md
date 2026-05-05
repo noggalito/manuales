@@ -5,7 +5,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 <p style="text-align: center"><img src="./assets/logo debian.png" style="width: 25%;" alt="Debian" /></p>
 
 
-**Autor:** [Calú](https://github.com/calu777) 
+**Autor:** [Calú](https://github.com/calu777)  
 **Fecha de inicio:** 2026-04-19  
 **Última actualización:** 2026-04-28  
 **Versión:** v0.1   
@@ -29,9 +29,9 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 
 ## Índice
 
-### Parte I — Preparación
+### Etapa I — Preparación
 
-#### [1. Descarga y validación de la ISO](#1-descarga-y-validación-de-la-iso)
+#### 1. Descarga y validación de la ISO
 
 - [1.1 Variables de trabajo](#11-variables-de-trabajo)
 - [1.2 Importación y verificación de la clave de firmado](#12-importación-y-verificación-de-la-clave-de-firmado)
@@ -40,7 +40,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [1.5 Verificación del hash de la ISO](#15-verificación-del-hash-de-la-iso)
 - [1.6 Verificación integral (opcional, para scripts)](#16-verificación-integral-opcional-para-scripts)
 
-#### [2. Instalación del sistema base](#2-instalación-del-sistema-base)
+#### 2. Instalación del sistema base
 
 - [2.1 Consideraciones previas al instalador](#21-consideraciones-previas-al-instalador)
 - [2.2 Estrategia de particionado](#22-estrategia-de-particionado)
@@ -48,16 +48,16 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [2.4 Unlock remoto de LUKS (opcional, solo si se usó cifrado)](#24-unlock-remoto-de-luks-opcional-solo-si-se-usó-cifrado)
 - [2.5 Primer arranque y verificación básica](#25-primer-arranque-y-verificación-básica)
 
-### Parte II — Configuración base del sistema
+### Etapa II — Configuración base del sistema
 
-#### [3. Preparación mínima para administración](#3-preparación-mínima-para-administración)
+#### 3. Preparación mínima para administración
 
 - [3.1 Diagnóstico: ¿está `sudo` instalado?](#31-diagnóstico-está-sudo-instalado)
 - [3.2 Instalación de `sudo`](#32-instalación-de-sudo)
 - [3.3 Activación de la pertenencia al grupo](#33-activación-de-la-pertenencia-al-grupo)
 - [3.4 Checklist de cierre](#34-checklist-de-cierre)
 
-#### [4. Acceso remoto inicial](#4-acceso-remoto-inicial)
+#### 4. Acceso remoto inicial
 
 - [4.1 Verificación del servidor SSH](#41-verificación-del-servidor-ssh)
 - [4.2 Copia de la llave pública del administrador](#42-copia-de-la-llave-pública-del-administrador)
@@ -65,7 +65,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [4.4 Mantener el canal de rescate abierto](#44-mantener-el-canal-de-rescate-abierto)
 - [4.5 Checklist de cierre](#45-checklist-de-cierre)
 
-#### [5. Configuración regional y de identidad](#5-configuración-regional-y-de-identidad)
+#### 5. Configuración regional y de identidad
 
 - [5.1 Hostname](#51-hostname)
 - [5.2 Archivo `/etc/hosts`](#52-archivo-etchosts)
@@ -75,7 +75,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [5.6 `machine-id`](#56-machine-id)
 - [5.7 Checklist de cierre](#57-checklist-de-cierre)
 
-#### [6. Repositorios y primera actualización completa](#6-repositorios-y-primera-actualización-completa)
+#### 6. Repositorios y primera actualización completa
 
 - [6.1 Respaldo del `sources.list` original](#61-respaldo-del-sourceslist-original)
 - [6.2 Edición del `sources.list`](#62-edición-del-sourceslist)
@@ -83,7 +83,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [6.4 Reinicio si fue actualizado el kernel](#64-reinicio-si-fue-actualizado-el-kernel)
 - [6.5 Checklist de cierre](#65-checklist-de-cierre)
 
-#### [7. Usuarios y privilegios](#7-usuarios-y-privilegios)
+#### 7. Usuarios y privilegios
 
 - [7.1 Verificación del usuario administrativo](#71-verificación-del-usuario-administrativo)
 - [7.2 Grupos recomendados para el usuario administrativo](#72-grupos-recomendados-para-el-usuario-administrativo)
@@ -92,9 +92,9 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [7.5 Bloqueo de la cuenta de root](#75-bloqueo-de-la-cuenta-de-root)
 - [7.6 Checklist de cierre de la parte II](#76-checklist-de-cierre-de-la-parte-ii)
 
-### Parte III — Hardening
+### Etapa III — Hardening
 
-#### [8. Hardening de SSH](#8-hardening-de-ssh)
+#### 8. Hardening de SSH
 
 - [8.1 Archivo modular `/etc/ssh/sshd_config.d/99-hardening.conf`](#81-archivo-modular-etcsshsshd_configd99-hardeningconf)
 - [8.2 Cambio de puerto, password auth y solo pubkey](#82-cambio-de-puerto-password-auth-y-solo-pubkey)
@@ -104,7 +104,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [8.6 Validación y recarga segura](#86-validación-y-recarga-segura)
 - [8.7 Checklist de cierre](#87-checklist-de-cierre)
 
-#### [9. Firewall (UFW)](#9-firewall-ufw)
+#### 9. Firewall (UFW)
 
 - [9.1 Instalación y políticas por defecto](#91-instalación-y-políticas-por-defecto)
 - [9.2 IPv6 (`/etc/default/ufw`)](#92-ipv6-etcdefaultufw)
@@ -113,7 +113,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [9.5 Activación final y verificación](#95-activación-final-y-verificación)
 - [9.6 Checklist de cierre](#96-checklist-de-cierre)
 
-#### [10. Protección contra fuerza bruta (fail2ban)](#10-protección-contra-fuerza-bruta-fail2ban)
+#### 10. Protección contra fuerza bruta (fail2ban)
 
 - [10.1 Instalación](#101-instalación)
 - [10.2 Configuración local (`jail.local`)](#102-configuración-local-jaillocal)
@@ -121,7 +121,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [10.4 Monitoreo de bans](#104-monitoreo-de-bans)
 - [10.5 Checklist de cierre](#105-checklist-de-cierre)
 
-#### [11. Hardening del kernel y del sistema](#11-hardening-del-kernel-y-del-sistema)
+#### 11. Hardening del kernel y del sistema
 
 - [11.1 Parámetros sysctl de red y de kernel](#111-parámetros-sysctl-de-red-y-de-kernel)
 - [11.2 Límites de recursos (`/etc/security/limits.conf`)](#112-límites-de-recursos-etcsecuritylimitsconf)
@@ -129,7 +129,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [11.4 Protección de GRUB (solo bare metal)](#114-protección-de-grub-solo-bare-metal)
 - [11.5 Checklist de cierre](#115-checklist-de-cierre)
 
-#### [12. Auditoría y detección](#12-auditoría-y-detección)
+#### 12. Auditoría y detección
 
 - [12.1 `auditd` — reglas mínimas](#121-auditd--reglas-mínimas)
 - [12.2 `rkhunter` — escaneo de rootkits](#122-rkhunter--escaneo-de-rootkits)
@@ -138,7 +138,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [12.5 Revisión periódica de logs y registros](#125-revisión-periódica-de-logs-y-registros)
 - [12.6 Checklist de cierre](#126-checklist-de-cierre)
 
-#### [13. AppArmor](#13-apparmor)
+#### 13. AppArmor
 
 - [13.1 Verificación del estado](#131-verificación-del-estado)
 - [13.2 Perfiles en `enforce` vs `complain`](#132-perfiles-en-enforce-vs-complain)
@@ -147,9 +147,9 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 
 #### [Cierre de la Parte III](#cierre-de-la-parte-iii)
 
-### Parte IV — Mantenimiento y actualizaciones
+### Etapa IV — Mantenimiento y actualizaciones
 
-#### [14. Actualizaciones automáticas](#14-actualizaciones-automáticas)
+#### 14. Actualizaciones automáticas
 
 - [14.1 Instalación](#141-instalación)
 - [14.2 Configuración de orígenes](#142-configuración-de-orígenes)
@@ -161,7 +161,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [14.8 Revisión de logs tras la primera ejecución](#148-revisión-de-logs-tras-la-primera-ejecución)
 - [14.9 Checklist de cierre](#149-checklist-de-cierre)
 
-#### [15. Sincronización de tiempo](#15-sincronización-de-tiempo)
+#### 15. Sincronización de tiempo
 
 - [15.1 Migración de `systemd-timesyncd` a `chrony`](#151-migración-de-systemd-timesyncd-a-chrony)
 - [15.2 Configuración de servidores NTP](#152-configuración-de-servidores-ntp)
@@ -170,7 +170,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [15.5 Verificación cruzada con `timedatectl`](#155-verificación-cruzada-con-timedatectl)
 - [15.6 Checklist de cierre](#156-checklist-de-cierre)
 
-#### [16. Logs y rotación](#16-logs-y-rotación)
+#### 16. Logs y rotación
 
 - [16.1 Configuración de `journald`](#161-configuración-de-journald)
 - [16.2 `logrotate` para logs de aplicaciones](#162-logrotate-para-logs-de-aplicaciones)
@@ -178,14 +178,14 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [16.4 Verificación de uso de disco](#164-verificación-de-uso-de-disco)
 - [16.5 Checklist de cierre](#165-checklist-de-cierre)
 
-#### [17. Monitoreo básico](#17-monitoreo-básico)
+#### 17. Monitoreo básico
 
 - [17.1 Herramientas de consulta puntual](#171-herramientas-de-consulta-puntual)
 - [17.2 Alertas mínimas vía cron](#172-alertas-mínimas-vía-cron)
 - [17.3 Estado de servicios críticos](#173-estado-de-servicios-críticos)
 - [17.4 Checklist de cierre](#174-checklist-de-cierre)
 
-#### [18. Respaldos](#18-respaldos)
+#### 18. Respaldos
 
 - [18.1 Estrategia 3-2-1](#181-estrategia-3-2-1)
 - [18.2 Qué respaldar](#182-qué-respaldar)
@@ -195,7 +195,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [18.6 Restauración del servidor desde cero](#186-restauración-del-servidor-desde-cero)
 - [18.7 Checklist de cierre](#187-checklist-de-cierre)
 
-#### [19. Documentación operativa](#19-documentación-operativa)
+#### 19. Documentación operativa
 
 - [19.1 Inventario del servidor](#191-inventario-del-servidor)
 - [19.2 Diagrama lógico](#192-diagrama-lógico)
@@ -207,14 +207,14 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 
 ### Anexos
 
-#### [Anexo A — Índice consolidado de plantillas](#anexo-a--índice-consolidado-de-plantillas)
+#### Anexo A — Índice consolidado de plantillas
 
 - [A.1 Convenciones del sistema de plantillas](#a1-convenciones-del-sistema-de-plantillas)
 - [A.2 Inventario de plantillas](#a2-inventario-de-plantillas)
 - [A.3 Resumen de variables del manual](#a3-resumen-de-variables-del-manual)
 - [A.4 Modificación local de plantillas](#a4-modificación-local-de-plantillas)
 
-#### [Anexo B — Diagnóstico rápido post-incidente](#anexo-b--diagnóstico-rápido-post-incidente)
+#### Anexo B — Diagnóstico rápido post-incidente
 
 - [B.1 Imagen general del sistema](#b1-imagen-general-del-sistema)
 - [B.2 Síntoma: el servidor está lento o no responde](#b2-síntoma-el-servidor-está-lento-o-no-responde)
@@ -227,7 +227,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [B.9 Recolección de evidencia para análisis posterior](#b9-recolección-de-evidencia-para-análisis-posterior)
 - [B.10 Cuándo escalar](#b10-cuándo-escalar)
 
-#### [Anexo C — Reenvío de correo del sistema con `msmtp`](#anexo-c--reenvío-de-correo-del-sistema-con-msmtp)
+#### Anexo C — Reenvío de correo del sistema con `msmtp`
 
 - [C.1 Decisiones de diseño](#c1-decisiones-de-diseño)
 - [C.2 Requisitos previos](#c2-requisitos-previos)
@@ -247,7 +247,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 
 ---
 
-## Parte I — Preparación
+## Etapa I — Preparación
 
 ### 1. Descarga y validación de la ISO
 
@@ -647,7 +647,7 @@ Solo con todos estos puntos verificados tiene sentido avanzar al hardening, porq
 
 ---
 
-## Parte II — Configuración base del sistema
+## Etapa II — Configuración base del sistema
 
 Esta parte lleva al sistema recién instalado desde un estado "arranca y es accesible" a un estado "utilizable como servidor administrable de forma estándar". Cubre la instalación de herramientas administrativas básicas, el acceso remoto, la identidad del sistema, los repositorios y usuarios.
 
@@ -1468,7 +1468,7 @@ Con la parte II cerrada, el servidor es administrable con herramientas estándar
 
 ---
 
-## Parte III — Hardening
+## Etapa III — Hardening
 
 Las partes I y II dejaron el servidor instalado, identificable, accesible por SSH con llave pública, actualizado y con un usuario administrativo definido. Esta parte lo endurece: reduce la superficie de ataque, dificulta los abusos cuando un atacante ya tiene un punto de apoyo, y deja huellas de auditoría útiles para un análisis forense posterior.
 
@@ -2451,7 +2451,7 @@ El servidor sigue siendo administrable y funcional. Las capas añadidas son tran
 La Parte IV (mantenimiento) se ocupa de mantener este estado en el tiempo: actualizaciones automáticas, sincronización de tiempo, rotación de logs, monitoreo, respaldos.
 
 ---
-## Parte IV — Mantenimiento y actualizaciones
+## Etapa IV — Mantenimiento y actualizaciones
 
 Las partes I a III dejaron el servidor instalado, configurado y endurecido. Esta parte se ocupa de mantenerlo así en el tiempo. Un servidor endurecido en el día 1 deja de estarlo a los pocos meses si no se actualiza, si su reloj se desincroniza, si los logs desbordan el disco, si nadie repara en una caída de un servicio crítico, o si una falla de hardware sorprende sin un respaldo reciente.
 
