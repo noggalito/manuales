@@ -1,24 +1,28 @@
 # Despliegue de Debian 13 Trixie server
 
-Este documento describe las acciones necesarias para dejar listo un sistema Debian 13.4 Trixie server para las operaciones cotidianas, haciendo énfasis en la seguridad (hardening). El manual tiene un enfoque generalista, sirve como base para cualquier servidor, y como punto de partida. Luego, cada servidor específico deberá desplegar las acciones según su particularidad.
+Este documento describe las acciones necesarias para dejar listo un sistema Debian 13.5 Trixie server para las operaciones cotidianas, haciendo énfasis en la seguridad (hardening). El manual tiene un enfoque generalista, sirve como base para cualquier servidor, y como punto de partida. Luego, cada servidor específico deberá desplegar las acciones según su particularidad.
 
 <p style="text-align: center"><img src="./assets/logo debian.png" style="width: 25%;" alt="Debian" /></p>
 
 
 **Autor:** [Calú](https://github.com/calu777)  
 **Fecha de inicio:** 2026-04-19  
-**Última actualización:** 2026-04-28  
-**Versión:** v0.1   
+**Última actualización:** 2026-05-16  
+**Versión:** 0.2   
 
 ## a.  Historial de cambios
 
-* v0.1 – 2026-04-28 – Manual terminado para la versión 13.4.0 de Debian
-
+* [0.2] – 2026-05-16
+  * Actualización de Debian 13.4 a 13.5
+  * Inclusión del override en C.6.1
+* [0.1] – 2026-04-28
+  * Manual terminado para la versión 13.4.0 de Debian
 
 ## b. To-do
 
 * Nuevo manual de reenvío de logs a un servidor central con `systemd-journal-upload` y `systemd-journal-remote`
 * Más precisión y profundidad en el uso de `borg` para respaldos
+* Inclusión de Ansible
 
 ## c. Requerimientos previos
 
@@ -143,7 +147,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [13.1 Verificación del estado](#131-verificación-del-estado)
 - [13.2 Perfiles en `enforce` vs `complain`](#132-perfiles-en-enforce-vs-complain)
 - [13.3 Añadir perfiles adicionales](#133-añadir-perfiles-adicionales)
-- [13.4 Checklist de cierre](#134-checklist-de-cierre)
+- [13.5 Checklist de cierre](#134-checklist-de-cierre)
 
 #### [Cierre de la Parte III](#cierre-de-la-parte-iii)
 
@@ -256,10 +260,11 @@ Directorio de [netinst](https://cdimage.debian.org/debian-cd/current/amd64/bt-cd
 #### 1.1 Variables de trabajo
 
 ```bash
-DEBIAN_VER="13.4.0"
+DEBIAN_VER="13.5.0"
 DEBIAN_ARCH="amd64"
 ISO_NAME="debian-${DEBIAN_VER}-${DEBIAN_ARCH}-netinst.iso"
 WORKDIR="${HOME}/iso-debian"
+WORKDIR="/tmp/iso-debian"
 MIRROR="https://cdimage.debian.org/debian-cd/${DEBIAN_VER}/${DEBIAN_ARCH}/iso-cd"
 CD_SIGNING_KEY="DF9B9C49EAA9298432589D76DA87E80D6294BE9B"
 
@@ -323,7 +328,7 @@ sha512sum --ignore-missing -c SHA512SUMS
 Resultado esperado:
 
 ```
-debian-13.4.0-amd64-netinst.iso: La suma coincide
+debian-13.5.0-amd64-netinst.iso: La suma coincide
 ```
 
 La opción `--ignore-missing` evita mensajes de error por las decenas de otras 
@@ -895,8 +900,8 @@ getent hosts <hostname>
 
 ```bash
 timedatectl                              # estado actual
-timedatectl list-timezones | grep <Region>   # buscar zona
-sudo timedatectl set-timezone <Region/Ciudad>
+timedatectl list-timezones | grep <Region>   # buscar zona, por ejemplo America
+sudo timedatectl set-timezone <Region/Ciudad>  # por ejemplo America/Lima
 ```
 
 Ejemplo para operaciones en Perú:
@@ -1959,6 +1964,8 @@ En Debian 13, varios de estos parámetros ya tienen valores razonables por defec
 sudoedit /etc/security/limits.d/99-hardening.conf
 ```
 
+Agregar:
+
 ```
 # Sin core dumps por defecto (los core pueden contener datos sensibles en RAM)
 *               hard    core            0
@@ -2428,7 +2435,7 @@ Si un perfil no genera denegaciones legítimas durante días de uso normal, se p
 
 Crear perfiles propios para aplicaciones custom (un script, un binario propio, un servicio interno) requiere `aa-genprof` y comprensión del modelo de AppArmor. Es un nivel de hardening avanzado, pertinente cuando el servidor expone una aplicación específica de alto valor.
 
-#### 13.4 Checklist de cierre
+#### 13.5 Checklist de cierre
 
 - [ ] `aa-status` muestra perfiles cargados en `enforce mode`
 - [ ] AppArmor activo en boot (`cat /sys/kernel/security/lsm` lo confirma)
@@ -3466,12 +3473,12 @@ El inventario mínimo para un servidor base incluye:
 | FQDN | `villonaco.lan` | `hostname -f` |
 | Rol | "Servidor base — sin rol específico aún" | manual / decisión del operador |
 | Ubicación física / proveedor | "VM local en estación de trabajo del admin" / "VPS en Hetzner FSN1" | conocida por el operador |
-| Sistema operativo | "Debian 13.4 Trixie" | `cat /etc/os-release` |
+| Sistema operativo | "Debian 13.5 Trixie" | `cat /etc/os-release` |
 | IP de gestión | `192.168.1.10/24` | `ip -brief address` |
 | Puerto SSH | `17177` | `/etc/ssh/sshd_config.d/99-hardening.conf` |
 | Usuario administrativo | `usuario` | manual |
 | Fecha de despliegue | `2026-05-27` | conocida por el operador |
-| Versión del manual seguido | `v1.2` | encabezado del manual |
+| Versión del manual seguido | `v0.2` | encabezado del manual |
 
 Comandos útiles para extraer el inventario actualizado del servidor:
 
@@ -4101,6 +4108,33 @@ sudo sed -i '/^timeout/a aliases         /etc/msmtp/aliases' /etc/msmtprc
 
 > Nota sobre `/etc/aliases`: el archivo tradicional de Unix sigue siendo respetable y otras herramientas pueden consultarlo. Si se prefiere mantener coherencia, configurarlo también con la misma redirección (`root: dirección@externa`). Pero la fuente de verdad operativa para msmtp es `/etc/msmtp/aliases`. Si en algún momento cambia la dirección de destino, cambiarla en ambos archivos.
 
+##### C.6.1 Override de AppArmor para leer el archivo de aliases
+
+Debian 13 incluye un perfil AppArmor activo para `/usr/bin/msmtp` que limita qué archivos puede leer el binario, independientemente de los permisos POSIX. El perfil contempla `/etc/msmtprc`, `/etc/mailname`, `/etc/aliases` y archivos en el home del usuario, pero no contempla `/etc/msmtp/aliases`. La denegación de AppArmor puede no aparecer en `journalctl -k` si el perfil no fuerza auditoría de ese tipo de eventos, lo que dificulta diagnosticar la causa real.
+
+La solución es agregar un override local sin desactivar el perfil, usando el mecanismo `local/` que el propio perfil ya incluye para extensiones del operador:
+
+```bash
+sudo tee /etc/apparmor.d/local/usr.bin.msmtp > /dev/null <<'EOF'
+# Permitir lectura del archivo de aliases gestionado en /etc/msmtp/
+/etc/msmtp/ r,
+/etc/msmtp/aliases r,
+EOF
+
+sudo apparmor_parser -r /etc/apparmor.d/usr.bin.msmtp
+```
+
+Verificar que el perfil sigue cargado en modo enforce y que el override está activo:
+
+```bash
+sudo aa-status | grep -A1 msmtp
+sudo cat /etc/apparmor.d/local/usr.bin.msmtp
+```
+
+Si más adelante se decide colocar el archivo de aliases en otra ruta (por ejemplo `/etc/mail/aliases.msmtp` para alinearse con otras herramientas), reemplazar las dos líneas del override en consecuencia y recargar el perfil con `apparmor_parser -r`.
+
+> Diagnóstico cuando se sospecha de AppArmor: la pista decisiva es `sudo aa-status | grep msmtp`. Si aparece `msmtp` listado bajo "profiles are in enforce mode", el perfil está activo. La ausencia de mensajes `DENIED` en `journalctl -k` no descarta el bloqueo; algunos perfiles tienen `audit=off` para ciertas operaciones y deniegan silenciosamente.
+
 #### C.7 Configuración de mailutils
 
 `mailutils` por defecto usa su propia configuración mínima. Para que use `msmtp` para enviar y respete configuración estándar:
@@ -4169,6 +4203,7 @@ Errores comunes y su causa:
 | `TLS handshake failed` | Certificado del relay no confiable | Verificar `tls_trust_file` (típicamente `/etc/ssl/certs/ca-certificates.crt`) |
 | `recipient address ... not a valid RFC 5321` | Destinatario sin `@dominio` y aliases mal configurados | Verificar `/etc/msmtp/aliases` y la directiva `aliases` en `/etc/msmtprc` |
 | `cannot log to /var/log/msmtp.log` | Logfile dedicado activado pero sin permisos | Comentar la línea `logfile` en `/etc/msmtprc` (la plantilla v1.1 ya viene así) |
+| `Permiso denegado` sobre `/etc/msmtp/aliases` con permisos POSIX correctos | Perfil AppArmor bloquea la lectura | Aplicar override de C.6.1 |
 
 #### C.10 Prueba de redirección de aliases
 
