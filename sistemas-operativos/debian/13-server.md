@@ -7,10 +7,15 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 
 **Autor:** [Calú](https://github.com/calu777)  
 **Fecha de inicio:** 2026-04-19  
-**Última actualización:** 2026-05-16  
-**Versión:** 0.2   
+**Última actualización:** 2026-05-20  
+**Versión:** 0.3   
 
-## a.  Historial de cambios
+## a. Historial de cambios
+
+* [0.3] – 2026-05-20
+  * Seguridad: URLs de plantillas migradas a SHA anclado + verificación sha256sum; nuevo hardening de sudo/pam_faillock; refuerzo SSH con   DisableForwarding; passphrase de Borg protegida con read -s.
+  * Correcciones: SystemMaxUse de journald reducido a 1 G; nota sobre PASS_MIN_LEN ignorado con pam_pwquality; variable $MIPUERTO_SMTP para evitar colisión; LUKS2/Argon2id/GRUB aclarado; sed de dropbear reemplazado por secuencia robusta; fixes de numeración y typo.
+  * Mejoras: nueva §12.6 con auditoría lynis; soporte NTS en chrony; pool NTP por país; nota de egreso en UFW; referencias cruzadas entre MTA, fail2ban y pam_faillock.
 
 * [0.2] – 2026-05-16
   * Actualización de Debian 13.4 a 13.5
@@ -27,7 +32,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 ## c. Requerimientos previos
 
 * Llave SSH Ed25519 para el punto "4.2 Copia de la llave pública del administrador". Manual para generarla disponible [aquí](https://github.com/noggalito/manuales/blob/main/ssh-ed25519.md)
-* Una cuenta de correo electrónico (a veces con coontraseña por aplicación) desde donde se enviarán las notificaciones del servidor
+* Una cuenta de correo electrónico (a veces con contraseña por aplicación) desde donde se enviarán las notificaciones del servidor
 
 ---
 
@@ -91,10 +96,11 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 
 - [7.1 Verificación del usuario administrativo](#71-verificación-del-usuario-administrativo)
 - [7.2 Grupos recomendados para el usuario administrativo](#72-grupos-recomendados-para-el-usuario-administrativo)
-- [7.3 Política de contraseñas](#73-política-de-contraseñas)
-- [7.4 Creación de usuarios adicionales (si aplica)](#74-creación-de-usuarios-adicionales-si-aplica)
-- [7.5 Bloqueo de la cuenta de root](#75-bloqueo-de-la-cuenta-de-root)
-- [7.6 Checklist de cierre de la parte II](#76-checklist-de-cierre-de-la-parte-ii)
+- [7.3 Hardening de sudo](#73-hardening-de-sudo)
+- [7.4 Política de contraseñas](#74-política-de-contraseñas)
+- [7.5 Creación de usuarios adicionales (si aplica)](#75-creación-de-usuarios-adicionales-si-aplica)
+- [7.6 Bloqueo de la cuenta de root](#76-bloqueo-de-la-cuenta-de-root)
+- [7.7 Checklist de cierre de la parte II](#77-checklist-de-cierre-de-la-parte-ii)
 
 ### Etapa III — Hardening
 
@@ -140,14 +146,15 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [12.3 `debsums` — integridad de paquetes](#123-debsums--integridad-de-paquetes)
 - [12.4 AIDE — integridad de archivos del sistema](#124-aide--integridad-de-archivos-del-sistema)
 - [12.5 Revisión periódica de logs y registros](#125-revisión-periódica-de-logs-y-registros)
-- [12.6 Checklist de cierre](#126-checklist-de-cierre)
+- [12.6 `lynis` — auditoría periódica del baseline de seguridad](#126-lynis--auditoría-periódica-del-baseline-de-seguridad)
+- [12.7 Checklist de cierre](#127-checklist-de-cierre)
 
 #### 13. AppArmor
 
 - [13.1 Verificación del estado](#131-verificación-del-estado)
 - [13.2 Perfiles en `enforce` vs `complain`](#132-perfiles-en-enforce-vs-complain)
 - [13.3 Añadir perfiles adicionales](#133-añadir-perfiles-adicionales)
-- [13.5 Checklist de cierre](#134-checklist-de-cierre)
+- [13.4 Checklist de cierre](#134-checklist-de-cierre)
 
 #### [Cierre de la Parte III](#cierre-de-la-parte-iii)
 
@@ -263,7 +270,6 @@ Directorio de [netinst](https://cdimage.debian.org/debian-cd/current/amd64/bt-cd
 DEBIAN_VER="13.5.0"
 DEBIAN_ARCH="amd64"
 ISO_NAME="debian-${DEBIAN_VER}-${DEBIAN_ARCH}-netinst.iso"
-WORKDIR="${HOME}/iso-debian"
 WORKDIR="/tmp/iso-debian"
 MIRROR="https://cdimage.debian.org/debian-cd/${DEBIAN_VER}/${DEBIAN_ARCH}/iso-cd"
 CD_SIGNING_KEY="DF9B9C49EAA9298432589D76DA87E80D6294BE9B"
@@ -435,7 +441,7 @@ Cuando el servidor aloja datos sensibles, o su ubicación física no está plena
 
 **Puntos importantes sobre LUKS en servidores:**
 
-1. `/boot` no se cifra en el esquema estándar de Debian. GRUB puede leer LUKS1 pero el soporte para LUKS2 es limitado; mantener `/boot` sin cifrar simplifica y es un compromiso aceptable (el contenido de `/boot` no es sensible, solo kernels e initramfs).
+1. `/boot` no se cifra en el esquema estándar de Debian. GRUB 2.12 (incluido en Debian 13 Trixie) soporta LUKS2 con PBKDF2 como KDF, pero **no** con Argon2id, que es precisamente el KDF por defecto cuando el instalador de Debian 13 crea un contenedor LUKS2. Por eso si `/boot` quedara dentro del contenedor LUKS2 con Argon2id, GRUB no podría leerlo y el sistema no arrancaría. Mantener `/boot` fuera del contenedor LUKS simplifica el arranque y es un compromiso aceptable: el contenido de `/boot` no es sensible (kernels e initramfs), y el secreto real reside en los datos del volumen cifrado.
 
 2. Frase de paso vs archivo de clave: el instalador pide una frase de paso. Esta frase se solicitará en cada arranque, lo cual es problemático en servidores remotos. La solución es habilitar unlock remoto (sección 2.4).
 
@@ -515,7 +521,19 @@ Formato: `IP=cliente:server:gateway:netmask:hostname:interfaz:autoconf`. El camp
 Por defecto, dropbear escucha en el puerto 22 del initramfs. Conviene cambiarlo para que no colisione con el SSH del sistema ya arrancado (distinta sesión, misma IP, evita confusiones en `known_hosts`):
 
 ```bash
-sudo sed -i 's/^#DROPBEAR_OPTIONS=.*/DROPBEAR_OPTIONS="-p 2222"/' /etc/dropbear/initramfs/dropbear.conf
+# Secuencia robusta: funciona tanto si la línea está comentada
+# como si ya existe descomentada o si la directiva no está en el archivo
+if grep -q 'DROPBEAR_OPTIONS' /etc/dropbear/initramfs/dropbear.conf; then
+    sudo sed -i 's/.*DROPBEAR_OPTIONS=.*/DROPBEAR_OPTIONS="-p 2222"/' \
+        /etc/dropbear/initramfs/dropbear.conf
+else
+    echo 'DROPBEAR_OPTIONS="-p 2222"' \
+        | sudo tee -a /etc/dropbear/initramfs/dropbear.conf > /dev/null
+fi
+
+# Verificar que la directiva quedó activa
+grep 'DROPBEAR_OPTIONS' /etc/dropbear/initramfs/dropbear.conf
+# Resultado esperado: DROPBEAR_OPTIONS="-p 2222"
 ```
 
 ##### 2.4.5 Regenerar el initramfs y probar
@@ -877,8 +895,12 @@ sudo cp /etc/hosts /etc/hosts.ori
 # Definir la variable $MIHOST
 export MIHOST=villonaco
 
-# Bajarse la plantilla de /etc/hosts
-wget https://raw.githubusercontent.com/noggalito/manuales/refs/heads/main/assets/plantilla-etc-hosts.txt -O /tmp/plantilla-etc-hosts.txt
+# Descargar la plantilla (requiere SHA_COMMIT y ASSETS_BASE definidos según §A.1.1)
+wget "${ASSETS_BASE}/plantilla-etc-hosts.txt" -O /tmp/plantilla-etc-hosts.txt
+
+# Verificar integridad (reemplazar <SHA256> con el hash obtenido para este SHA_COMMIT)
+echo "<SHA256-ESPERADO>  /tmp/plantilla-etc-hosts.txt" | sha256sum -c \
+  || { echo "✗ ERROR: hash no coincide — NO aplicar este archivo"; exit 1; }
 
 # Reemplazar variables y generar el archivo en destino
 sed "s/\$MIHOST/$MIHOST/g" /tmp/plantilla-etc-hosts.txt | sudo tee /etc/hosts > /dev/null
@@ -1374,7 +1396,136 @@ Otros grupos que pueden ser útiles según el rol futuro del servidor (no se añ
 
 La pertenencia a grupos privilegiados debe tratarse como concesión de permisos, no como conveniencia. Revisar en cada caso si el acceso directo al grupo se justifica o conviene mantener `sudo` como barrera.
 
-#### 7.3 Política de contraseñas
+#### 7.3 Hardening de sudo
+
+`sudo` tiene su propia superficie de seguridad: tickets de larga duración permiten que una sesión desatendida pueda ser aprovechada; sin logging, las acciones ejecutadas con privilegios de root no quedan registradas; sin entorno limpio, variables heredadas pueden manipular el comportamiento de los programas invocados como root.
+
+La configuración se hace en un archivo separado dentro de `/etc/sudoers.d/` para no tocar el archivo canónico gestionado por el paquete.
+
+##### 7.3.1 Archivo de hardening de sudoers
+
+```bash
+sudo tee /etc/sudoers.d/99-hardening > /dev/null <<'EOF'
+# Limpiar el entorno heredado antes de ejecutar como root
+Defaults env_reset
+
+# Ruta segura de binarios (no heredar $PATH del usuario invocador)
+Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+# El ticket de sudo expira a los 5 minutos de inactividad
+Defaults timestamp_timeout=5
+
+# Requiere TTY real; evita que scripts sin supervisión usen sudo
+# Comentar esta línea si el servidor es gestionado con Ansible u otra herramienta sin TTY
+Defaults requiretty
+
+# Registrar la sesión completa (output) de cada ejecución sudo en /var/log/sudo-io/
+Defaults log_output
+
+# Notificar al administrador cuando se introduce una contraseña incorrecta en sudo
+Defaults mail_badpass
+EOF
+
+# Verificar la sintaxis antes de que tome efecto (un error aquí puede inhabilitar sudo)
+sudo visudo -c -f /etc/sudoers.d/99-hardening
+```
+
+Si `visudo -c` no devuelve error, aplicar permisos correctos:
+
+```bash
+sudo chmod 440 /etc/sudoers.d/99-hardening
+sudo chown root:root /etc/sudoers.d/99-hardening
+```
+
+> **Sobre `requiretty`:** esta directiva puede romper herramientas de automatización sin TTY (Ansible, algunos scripts en systemd units). Si el servidor va a ser gestionado con una de estas herramientas, comentar esa línea o añadir una excepción por usuario:
+> ```
+> Defaults:miusuario_ansible !requiretty
+> ```
+
+##### 7.3.2 Verificación
+
+```bash
+sudo visudo -c      # verifica la sintaxis de todo el árbol sudoers
+sudo -l             # lista los privilegios del usuario actual con la nueva configuración
+```
+
+##### 7.3.3 pam_faillock — lockout PAM para escalada local
+
+fail2ban (sección 10) protege contra fuerza bruta sobre SSH. No protege contra intentos de escalada local: un atacante con acceso a la consola o con una sesión no privilegiada puede intentar `su -` o contraseñas de `sudo` repetidamente sin que fail2ban intervenga. `pam_faillock` (incluido en `libpam-modules`, sin instalación adicional) añade lockout a nivel PAM cubriendo cualquier servicio que pase por `pam_unix`: login de consola, `su`, `sudo`, y SSH cuando usa PAM.
+
+**Configuración del comportamiento:**
+
+```bash
+sudo tee /etc/security/faillock.conf > /dev/null <<'EOF'
+# Número de fallos antes de bloquear la cuenta
+deny = 5
+
+# Ventana de tiempo en segundos durante la que se cuentan los fallos (15 minutos)
+fail_interval = 900
+
+# Tiempo de bloqueo en segundos tras alcanzar el límite (10 minutos)
+unlock_time = 600
+
+# Registrar eventos en el subsistema de auditoría (auditd)
+audit
+
+# No revelar si la cuenta está bloqueada (mismo mensaje que contraseña incorrecta)
+silent
+EOF
+```
+
+**Activación en PAM:**
+
+`pam_faillock` se integra en `/etc/pam.d/common-auth`. Editar este archivo con extremo cuidado: un error puede dejar el sistema sin autenticación funcional.
+
+```bash
+# Respaldar siempre antes de modificar archivos PAM
+sudo cp /etc/pam.d/common-auth /etc/pam.d/common-auth.ori
+sudoedit /etc/pam.d/common-auth
+```
+
+Añadir la línea de `preauth` **antes** del módulo `pam_unix.so`, y la de `authfail` inmediatamente **después**. La estructura resultante debe quedar así (las líneas existentes se conservan; solo se añaden las marcadas):
+
+```
+# [AÑADIR] pam_faillock: contar fallos antes de autenticar
+auth    required                        pam_faillock.so preauth
+# [EXISTENTE] autenticación principal de contraseñas
+auth    [success=1 default=ignore]      pam_unix.so nullok
+# [AÑADIR] pam_faillock: registrar el fallo si pam_unix no autenticó
+auth    [default=die]                   pam_faillock.so authfail
+# [AÑADIR] pam_faillock: limpiar el contador si la autenticación tuvo éxito
+auth    sufficient                      pam_faillock.so authsucc
+```
+
+> **Atención:** la forma exacta de la línea `pam_unix.so` varía según las opciones instaladas en el sistema. Verificar el aspecto actual del archivo antes de editar. Si tras la modificación el login falla completamente, desde la sesión paralela (sección 4.4) ejecutar:
+> ```bash
+> sudo cp /etc/pam.d/common-auth.ori /etc/pam.d/common-auth
+> ```
+
+**Verificación:**
+
+```bash
+# Autenticarse con contraseña incorrecta varias veces y luego verificar el bloqueo
+sudo faillock --user $MIUSUARIO
+
+# Desbloquear manualmente (útil si se bloqueó uno mismo durante pruebas)
+sudo faillock --user $MIUSUARIO --reset
+```
+
+**Comandos de operación:**
+
+```bash
+# Ver el estado de bloqueo de cualquier usuario
+sudo faillock --user <usuario>
+
+# Desbloquear manualmente
+sudo faillock --user <usuario> --reset
+
+# Ver los eventos de fallo en auditd (requiere auditd activo, sección 12)
+sudo ausearch -m USER_LOGIN -sv no | tail -20
+```
+
+#### 7.4 Política de contraseñas
 
 Debian trae valores por defecto razonables. Reforzarlos editando `/etc/login.defs`:
 
@@ -1390,6 +1541,8 @@ PASS_MIN_DAYS   1
 PASS_MIN_LEN    12
 PASS_WARN_AGE   14
 ```
+
+> **Nota:** `PASS_MIN_LEN` en `login.defs` es **ignorado** cuando `pam_pwquality` está activo (que es el caso tras instalar `libpam-pwquality` en el siguiente paso). El mínimo efectivo lo determina el parámetro `minlen` de `pam_pwquality`, no esta directiva. `PASS_MIN_LEN` solo aplica si PAM no usa pwquality, lo que no es el caso en este servidor. Se mantiene el valor por coherencia y como fallback, pero el control real está en `pam_pwquality`.
 
 Estos valores afectan a usuarios creados después del cambio. Para aplicar la política al usuario actual:
 
@@ -1412,13 +1565,13 @@ password requisite pam_pwquality.so retry=3 minlen=12 difok=3 ucredit=-1 lcredit
 
 Significado de los parámetros:
 
-- `minlen=12` — mínimo 12 caracteres.
+- `minlen=12` — mínimo 12 caracteres (este es el valor efectivo, no el de `login.defs`).
 - `difok=3` — al menos 3 caracteres distintos respecto a la contraseña anterior.
 - `ucredit=-1` `lcredit=-1` `dcredit=-1` `ocredit=-1` — al menos una mayúscula, una minúscula, un dígito y un símbolo.
 - `reject_username` — rechaza contraseñas que contengan el nombre de usuario.
 - `enforce_for_root` — aplica la política también a root.
 
-#### 7.4 Creación de usuarios adicionales (si aplica)
+#### 7.5 Creación de usuarios adicionales (si aplica)
 
 Para un servidor administrado por una sola persona, normalmente basta con el usuario creado durante la instalación. Si hay más administradores:
 
@@ -1429,7 +1582,7 @@ sudo usermod -aG sudo,adm <nuevo_usuario>
 
 `adduser` (frontend de `useradd`) gestiona automáticamente el home, el shell, el grupo primario y solicita contraseña.
 
-#### 7.5 Bloqueo de la cuenta de root
+#### 7.6 Bloqueo de la cuenta de root
 
 Llegados a este punto, el usuario administrativo tiene `sudo` funcional, acceso SSH por llave verificado, y la sesión activa confirmada. Se puede bloquear root con seguridad.
 
@@ -1460,9 +1613,11 @@ sudo passwd root
 
 Esto establece una contraseña nueva y desbloquea la cuenta. No requiere conocer la anterior.
 
-#### 7.6 Checklist de cierre de la parte II
+#### 7.7 Checklist de cierre de la parte II
 
 - [ ] Usuario administrativo con `sudo` y `adm` verificados
+- [ ] `/etc/sudoers.d/99-hardening` creado y validado con `visudo -c`
+- [ ] `pam_faillock` configurado en `/etc/security/faillock.conf` e integrado en `common-auth`
 - [ ] Política de contraseñas configurada (`login.defs`, `pwquality`)
 - [ ] Usuarios adicionales creados si aplica
 - [ ] Cuenta de root bloqueada (`passwd -l root`)
@@ -1512,8 +1667,13 @@ Ventaja práctica: en una actualización mayor, el `sshd_config` lo reemplaza el
 export MIPUERTO=17177
 export MIUSUARIO=usuario # Ya se definió en 3.2.2
 
-# Bajarse la plantilla de /etc/ssh/sshd_config.d/99-hardening.conf
-wget https://raw.githubusercontent.com/noggalito/manuales/refs/heads/main/assets/plantilla-etc-ssh-sshd_config.d-99-hardening.conf.txt -O /tmp/plantilla-etc-ssh-sshd_config.d-99-hardening.conf.txt
+# Descargar la plantilla (requiere SHA_COMMIT y ASSETS_BASE definidos según §A.1.1)
+wget "${ASSETS_BASE}/plantilla-etc-ssh-sshd_config.d-99-hardening.conf.txt" \
+    -O /tmp/plantilla-etc-ssh-sshd_config.d-99-hardening.conf.txt
+
+# Verificar integridad (reemplazar <SHA256> con el hash obtenido para este SHA_COMMIT)
+echo "<SHA256-ESPERADO>  /tmp/plantilla-etc-ssh-sshd_config.d-99-hardening.conf.txt" | sha256sum -c \
+  || { echo "✗ ERROR: hash no coincide — NO aplicar este archivo"; exit 1; }
 
 # Reemplazar variables y generar el archivo en destino
 sed -e "s|\$MIPUERTO|${MIPUERTO}|g" \
@@ -1579,9 +1739,19 @@ AllowUsers <usuario1> <usuario2>
 
 `ClientAliveInterval` + `ClientAliveCountMax` cumplen dos propósitos: mantener la sesión viva contra firewalls que cortan conexiones inactivas, y desconectar sesiones zombies (atacante que abre conexión y la deja colgada).
 
-`X11Forwarding`, `AllowAgentForwarding`, `AllowTcpForwarding` y `PermitTunnel` se desactivan porque en un servidor administrado por SSH plano no se usan, y cada uno permite vectores de uso indebido (port forwarding hacia servicios internos, túneles SOCKS).
+`X11Forwarding`, `AllowAgentForwarding`, `AllowTcpForwarding`, `StreamLocalForwarding` y `PermitTunnel` se desactivan porque en un servidor administrado por SSH plano no se usan, y cada uno permite vectores de uso indebido (port forwarding hacia servicios internos, túneles SOCKS, reenvío de sockets Unix).
 
-> Si en el futuro se necesita forwarding puntual (`ssh -L`), se puede habilitar `AllowTcpForwarding` solo en ese momento o usar `Match User` para excepciones controladas. La política base es "todo apagado".
+En OpenSSH 8.9 y posteriores (disponible en Debian 13 Trixie), existe la directiva `DisableForwarding yes` que desactiva en una sola línea todos los tipos de forwarding (TCP, Unix socket, X11, agent, tunnel). Es equivalente a desactivar cada opción individualmente, pero más concisa y más robusta ante forwardings futuros que pudieran añadirse al protocolo. Si la plantilla no la incluye, puede añadirse manualmente al archivo `99-hardening.conf`:
+
+```
+DisableForwarding yes
+```
+
+> Si en el futuro se necesita forwarding puntual (`ssh -L`), habilitar `AllowTcpForwarding` únicamente para el usuario que lo requiere con un bloque `Match User`, sin modificar la política base:
+> ```
+> Match User operador-tuneles
+>     AllowTcpForwarding yes
+> ```
 
 #### 8.5 Algoritmos criptográficos modernos
 
@@ -1752,6 +1922,20 @@ sudo ufw allow from 10.0.0.5 to any port 5432 proto tcp comment 'Postgres desde 
 
 **No abrir lo que no se va a usar.** En el manual base solo se abre SSH. Los puertos de servicios concretos los abre el manual del rol cuando corresponda.
 
+**Filtrado de egreso (cuando el rol es conocido).** La política base `allow outgoing` es correcta para un servidor generalista. Cuando el rol del servidor está definido, restringir el tráfico saliente a lo estrictamente necesario reduce el impacto de un compromiso: un servidor web comprometido que no puede establecer conexiones salientes arbitrarias dificulta la exfiltración de datos y la comunicación con infraestructura de C2. Por ejemplo, un servidor que solo necesita acceder a repositorios Debian, servidores NTP y un relay SMTP puede restringirse a:
+
+```bash
+# Cambiar la política de egreso a deny y abrir solo lo necesario
+sudo ufw default deny outgoing
+sudo ufw allow out 53/udp comment 'DNS'
+sudo ufw allow out 80/tcp comment 'HTTP (apt, mirrors)'
+sudo ufw allow out 443/tcp comment 'HTTPS (apt, mirrors)'
+sudo ufw allow out 123/udp comment 'NTP'
+sudo ufw allow out 587/tcp comment 'SMTP relay'
+```
+
+Este nivel de control es opcional en el manual base y se documenta en los manuales de rol cuando aplica.
+
 #### 9.4 Inspección antes de activar
 
 Antes de `enable`, listar las reglas pendientes:
@@ -1813,6 +1997,8 @@ UFW con `limit` corta ráfagas cortas en SSH. fail2ban añade una capa complemen
 
 En un servidor con SSH solo por llave (sección 8), un atacante automatizado nunca pasa de la fase de autenticación, pero igual genera ruido en logs, consume CPU, y deja huella en `journalctl` que dificulta encontrar eventos reales. fail2ban silencia ese ruido.
 
+> **Relación con `pam_faillock` (§7.3.3):** fail2ban actúa sobre intentos de acceso remoto por red (SSH, servicios web, etc.). `pam_faillock` actúa sobre autenticación local a nivel PAM, cubriendo `su`, `sudo`, login de consola y otros servicios que no generan entradas que fail2ban pueda parsear. Las dos capas son complementarias y no se solapan.
+
 #### 10.1 Instalación
 
 ```bash
@@ -1828,8 +2014,13 @@ fail2ban distribuye su configuración en `/etc/fail2ban/jail.conf`. Ese archivo 
 ```bash
 export MIPUERTO=17177 # Definido en 8.1
 
-# Bajarse la plantilla de /etc/fail2ban/jail.local
-wget https://raw.githubusercontent.com/noggalito/manuales/refs/heads/main/assets/plantilla-etc-fail2ban-jail.local.txt -O /tmp/plantilla-etc-fail2ban-jail.local.txt
+# Descargar la plantilla (requiere SHA_COMMIT y ASSETS_BASE definidos según §A.1.1)
+wget "${ASSETS_BASE}/plantilla-etc-fail2ban-jail.local.txt" \
+    -O /tmp/plantilla-etc-fail2ban-jail.local.txt
+
+# Verificar integridad (reemplazar <SHA256> con el hash obtenido para este SHA_COMMIT)
+echo "<SHA256-ESPERADO>  /tmp/plantilla-etc-fail2ban-jail.local.txt" | sha256sum -c \
+  || { echo "✗ ERROR: hash no coincide — NO aplicar este archivo"; exit 1; }
 
 # Reemplazar variables y generar el archivo en destino
 sed -e "s|\$MIPUERTO|${MIPUERTO}|g" \
@@ -1927,8 +2118,15 @@ Los parámetros `sysctl` modifican comportamiento del kernel en caliente. Las mo
 #### 11.1 Parámetros sysctl de red y de kernel
 
 ```bash
-# Bajarse la plantilla de /etc/sysctl.d/99-hardening.conf
-sudo wget https://raw.githubusercontent.com/noggalito/manuales/refs/heads/main/assets/plantilla-etc-sysctl.d-99-hardening.conf.txt -O /etc/sysctl.d/99-hardening.conf
+# Descargar la plantilla (requiere SHA_COMMIT y ASSETS_BASE definidos según §A.1.1)
+wget "${ASSETS_BASE}/plantilla-etc-sysctl.d-99-hardening.conf.txt" \
+    -O /tmp/plantilla-etc-sysctl.d-99-hardening.conf.txt
+
+# Verificar integridad antes de aplicar como root
+echo "<SHA256-ESPERADO>  /tmp/plantilla-etc-sysctl.d-99-hardening.conf.txt" | sha256sum -c \
+  || { echo "✗ ERROR: hash no coincide — NO aplicar este archivo"; exit 1; }
+
+sudo cp /tmp/plantilla-etc-sysctl.d-99-hardening.conf.txt /etc/sysctl.d/99-hardening.conf
 ```
 **Justificación de los más relevantes:**
 
@@ -1979,8 +2177,15 @@ Los core dumps son útiles para depurar, pero en producción su valor es bajo y 
 Cada módulo cargado es código ejecutándose en kernel space. Los módulos no usados son superficie de ataque gratuita. En un servidor, varios buses y filesystems no se necesitan nunca.
 
 ```bash
-# Bajarse la plantilla de /etc/modprobe.d/99-hardening.conf
-sudo wget https://raw.githubusercontent.com/noggalito/manuales/refs/heads/main/assets/plantilla-etc-modprobe.d-99-hardening.conf.txt -O /etc/modprobe.d/99-hardening.conf
+# Descargar la plantilla (requiere SHA_COMMIT y ASSETS_BASE definidos según §A.1.1)
+wget "${ASSETS_BASE}/plantilla-etc-modprobe.d-99-hardening.conf.txt" \
+    -O /tmp/plantilla-etc-modprobe.d-99-hardening.conf.txt
+
+# Verificar integridad antes de aplicar como root
+echo "<SHA256-ESPERADO>  /tmp/plantilla-etc-modprobe.d-99-hardening.conf.txt" | sha256sum -c \
+  || { echo "✗ ERROR: hash no coincide — NO aplicar este archivo"; exit 1; }
+
+sudo cp /tmp/plantilla-etc-modprobe.d-99-hardening.conf.txt /etc/modprobe.d/99-hardening.conf
 ```
 
 `install <modulo> /bin/true` hace que cualquier intento de cargar el módulo ejecute `/bin/true` (que termina con éxito sin hacer nada). Más limpio que `blacklist`, que solo evita la carga automática pero permite la carga explícita.
@@ -2068,8 +2273,15 @@ sudo systemctl enable --now auditd
 **Reglas básicas:**
 
 ```bash
-# Bajarse la plantilla de /etc/audit/rules.d/99-hardening.rules
-sudo wget https://raw.githubusercontent.com/noggalito/manuales/refs/heads/main/assets/plantilla-etc-audit-rules.d-99-hardening.rules.txt -O /etc/audit/rules.d/99-hardening.rules
+# Descargar la plantilla (requiere SHA_COMMIT y ASSETS_BASE definidos según §A.1.1)
+wget "${ASSETS_BASE}/plantilla-etc-audit-rules.d-99-hardening.rules.txt" \
+    -O /tmp/plantilla-etc-audit-rules.d-99-hardening.rules.txt
+
+# Verificar integridad antes de aplicar como root
+echo "<SHA256-ESPERADO>  /tmp/plantilla-etc-audit-rules.d-99-hardening.rules.txt" | sha256sum -c \
+  || { echo "✗ ERROR: hash no coincide — NO aplicar este archivo"; exit 1; }
+
+sudo cp /tmp/plantilla-etc-audit-rules.d-99-hardening.rules.txt /etc/audit/rules.d/99-hardening.rules
 ```
 **Recargar reglas:**
 
@@ -2331,13 +2543,52 @@ sudo journalctl -u ssh --since '7 days ago' | grep -iE 'fail|invalid|preauth' | 
 sudo journalctl --since today -p warning..emerg --no-pager
 ```
 
-#### 12.6 Checklist de cierre
+#### 12.6 `lynis` — auditoría periódica del baseline de seguridad
+
+Las herramientas anteriores detectan cambios en archivos (AIDE), rootkits conocidos (rkhunter) e integridad de paquetes (debsums). `lynis` cubre un ángulo distinto: audita la *configuración* del sistema contra un conjunto de mejores prácticas de seguridad y genera un reporte con puntuación y sugerencias concretas. Es útil como auditoría periódica para detectar derivas en la configuración del servidor.
+
+```bash
+sudo apt install -y lynis
+```
+
+**Primera auditoría:**
+
+```bash
+sudo lynis audit system
+```
+
+La salida incluye una sección `Hardening index` con la puntuación (0–100), y secciones `Suggestions` y `Warnings` con las recomendaciones. En un servidor recién desplegado siguiendo este manual, la puntuación típica oscila entre 70 y 80 puntos; los puntos restantes corresponden a configuraciones avanzadas de compliance (AppArmor profiles personalizados, auditd con reglas exhaustivas, etc.) que van más allá del baseline generalista.
+
+**Auditoría automática mensual:**
+
+```bash
+sudo tee /etc/cron.monthly/lynis-audit > /dev/null <<'EOF'
+#!/bin/bash
+/usr/sbin/lynis audit system --quiet --cronjob 2>&1 | mail -s "Lynis audit $(hostname) $(date +%Y-%m)" root
+EOF
+sudo chmod 700 /etc/cron.monthly/lynis-audit
+sudo chown root:root /etc/cron.monthly/lynis-audit
+```
+
+La opción `--cronjob` suprime la salida interactiva; `--quiet` elimina el progreso visual. El reporte llega por correo a root (y por lo tanto al destino externo configurado en el Anexo C).
+
+**Actualización de la base de datos de lynis:**
+
+```bash
+sudo lynis update info   # ver versión actual y disponible
+sudo apt upgrade lynis   # actualizar desde los repositorios Debian
+```
+
+> lynis no modifica el sistema: solo audita y reporta. Es seguro ejecutarlo en cualquier momento sin riesgo de alterar la configuración.
+
+#### 12.7 Checklist de cierre
 
 - [ ] `auditd` activo con reglas mínimas en `/etc/audit/rules.d/99-hardening.rules`
 - [ ] `rkhunter` con base inicializada y cron diario configurado
 - [ ] `debsums` con chequeo diario activo
 - [ ] (Opcional, recomendable) `aide` con base inicial creada
-- [ ] Reportes diarios llegan al correo de root (verificable en `/var/mail/root` o vía MTA local)
+- [ ] `lynis` instalado y primera auditoría ejecutada
+- [ ] Reportes diarios llegan al correo de root — requiere MTA configurado (ver Anexo C)
 
 ### 13. AppArmor
 
@@ -2435,7 +2686,7 @@ Si un perfil no genera denegaciones legítimas durante días de uso normal, se p
 
 Crear perfiles propios para aplicaciones custom (un script, un binario propio, un servicio interno) requiere `aa-genprof` y comprensión del modelo de AppArmor. Es un nivel de hardening avanzado, pertinente cuando el servidor expone una aplicación específica de alto valor.
 
-#### 13.5 Checklist de cierre
+#### 13.4 Checklist de cierre
 
 - [ ] `aa-status` muestra perfiles cargados en `enforce mode`
 - [ ] AppArmor activo en boot (`cat /sys/kernel/security/lsm` lo confirma)
@@ -2659,7 +2910,7 @@ Si el correo a root está bien configurado, el reporte llega solo cuando hubo ca
 
 - [ ] `unattended-upgrades` y `apt-listchanges` instalados
 - [ ] `/etc/apt/apt.conf.d/50unattended-upgrades` con orígenes security + updates
-- [ ] Notificación por correo configurada (`Mail "root"`, `MailReport "on-change"`)
+- [ ] Notificación por correo configurada (`Mail "root"`, `MailReport "on-change"`) — requiere MTA configurado (ver Anexo C)
 - [ ] Reinicio automático configurado en ventana horaria
 - [ ] `/etc/apt/apt.conf.d/20auto-upgrades` con los cuatro parámetros activos
 - [ ] `apt-daily.timer` y `apt-daily-upgrade.timer` activos
@@ -2739,7 +2990,7 @@ Salida típica en Debian 13:
 pool 2.debian.pool.ntp.org iburst
 ```
 
-Para un servidor ubicado en una región específica, conviene usar el pool regional correspondiente, que reduce latencia y mejora la calidad del ajuste. Por ejemplo, para servidores en Sudamérica:
+Para un servidor ubicado en una región específica, conviene usar el pool por país (más preciso y con menor latencia que el pool continental) y el pool regional como respaldo. Por ejemplo, para servidores en Perú:
 
 ```bash
 sudoedit /etc/chrony/chrony.conf
@@ -2748,25 +2999,46 @@ sudoedit /etc/chrony/chrony.conf
 Reemplazar la línea `pool` por:
 
 ```
-# Pool regional de Sudamérica (ajustar según la región del servidor)
-pool 2.south-america.pool.ntp.org iburst maxsources 4
+# Pool por país (menor latencia, más precisión; ajustar según el país del servidor)
+# Lista de pools por país: https://www.pool.ntp.org/zone/@
+pool 0.pe.pool.ntp.org iburst maxsources 3
+pool 1.pe.pool.ntp.org iburst maxsources 2
 
-# Pool global como respaldo
-pool 2.debian.pool.ntp.org iburst maxsources 2
+# Pool regional de Sudamérica como respaldo
+pool 2.south-america.pool.ntp.org iburst maxsources 2
+
+# Pool global como último respaldo
+pool 2.debian.pool.ntp.org iburst maxsources 1
 ```
 
 Significado:
 
 - `iburst` — al iniciar, envía 4-8 paquetes rápidos para sincronizar más rápido.
-- `maxsources 4` — limita el número de servidores que el cliente toma del pool. 4 es razonable para sincronización confiable sin sobrecargar la red.
+- `maxsources N` — limita el número de servidores que el cliente toma del pool.
 
-Para servidores en otras regiones, sustituir el pool por el correspondiente: `north-america`, `europe`, `asia`, `oceania`. La lista completa está en <https://www.pool.ntp.org/zone/@>.
+Para servidores en otras regiones, sustituir el código de país según <https://www.pool.ntp.org/zone/@>, y el pool regional por el correspondiente: `north-america`, `europe`, `asia`, `oceania`.
 
-> Si el servidor está en una red corporativa con servidor NTP propio, usar ese servidor en lugar de los pools públicos. Por ejemplo:
+> Si el servidor está en una red corporativa con servidor NTP propio, usar ese servidor en lugar de los pools públicos:
 > ```
 > server ntp.empresa.local iburst
 > ```
-> Esto reduce dependencia de red externa y centraliza el control del tiempo en la infraestructura interna.
+
+**NTS (Network Time Security) — para entornos de alta exigencia:**
+
+La configuración estándar con pools públicos envía los paquetes NTP sin autenticación, lo que en principio permite ataques de manipulación del reloj en la red local. NTS (RFC 8915) añade autenticación criptográfica sobre TLS al protocolo NTP. chrony lo soporta desde la versión 4.0 (disponible en Debian 12+).
+
+Para activarlo, cambiar las directivas `pool`/`server` a directivas `pool`/`server` con la opción `nts`:
+
+```
+# Servidores con soporte NTS (verificar disponibilidad en el momento de la instalación)
+server time.cloudflare.com iburst nts
+server ntppool1.time.nl iburst nts
+
+# Pool estándar como respaldo sin NTS
+pool 2.debian.pool.ntp.org iburst maxsources 2
+```
+
+> NTS requiere que el servidor tenga la hora ya aproximadamente correcta para negociar el TLS. Si el reloj inicia muy desviado, `makestep` (ya configurado por defecto en Debian) lo corregirá en las primeras iteraciones sin NTS antes de que NTS entre en acción. Verificar el estado con `chronyc authdata`.
 
 Reiniciar chrony tras los cambios:
 
@@ -2842,10 +3114,11 @@ Confirmar:
 
 - [ ] `systemd-timesyncd` deshabilitado
 - [ ] `chrony` instalado y activo
-- [ ] Pool regional configurado en `/etc/chrony/chrony.conf`
+- [ ] Pool por país (y regional como respaldo) configurado en `/etc/chrony/chrony.conf`
 - [ ] `chronyc tracking` muestra stratum bajo y offset pequeño
 - [ ] `chronyc sources -v` muestra al menos una fuente con `^*`
 - [ ] `timedatectl` confirma sincronización y zona horaria
+- [ ] (Opcional) NTS configurado y verificado con `chronyc authdata`
 
 ### 16. Logs y rotación
 
@@ -2899,8 +3172,8 @@ Descomentar y ajustar:
 [Journal]
 Storage=persistent
 Compress=yes
-SystemMaxUse=2G
-SystemKeepFree=1G
+SystemMaxUse=1G
+SystemKeepFree=512M
 SystemMaxFileSize=128M
 MaxRetentionSec=3month
 ForwardToSyslog=no
@@ -2910,8 +3183,8 @@ Significado:
 
 - `Storage=persistent` — guardar en disco aunque `/var/log/journal/` no exista (lo crea si hace falta).
 - `Compress=yes` — comprimir logs viejos. Reduce el espacio en disco a costa de un poco de CPU.
-- `SystemMaxUse=2G` — el journal no usa más de 2 GB en total. Ajustar según el tamaño del LV `/var/log` configurado en la sección 2.2.
-- `SystemKeepFree=1G` — siempre dejar al menos 1 GB libre en el filesystem. Si el disco se llena, journald empieza a borrar logs viejos antes de seguir escribiendo.
+- `SystemMaxUse=1G` — el journal no usa más de 1 GB en total. Este valor es adecuado para el LV `/var/log` mínimo de 2 GiB recomendado en la sección 2.2, dejando margen para los logs de aplicaciones. Si el LV `/var/log` es de 5 GiB o más, se puede subir a `2G` o `3G`.
+- `SystemKeepFree=512M` — siempre dejar al menos 512 MB libres en el filesystem. Si el disco se llena, journald empieza a borrar logs viejos antes de seguir escribiendo.
 - `SystemMaxFileSize=128M` — cada archivo de journal individual no supera 128 MB. Cuando se llena, se rota a uno nuevo.
 - `MaxRetentionSec=3month` — borrar logs más viejos que 3 meses. Ajustar según los requerimientos de retención de la organización.
 - `ForwardToSyslog=no` — no duplicar logs a `/var/log/syslog` vía rsyslog. Reduce I/O y espacio. Si se necesita compatibilidad con herramientas que esperan `/var/log/syslog`, dejar `yes`.
@@ -3106,8 +3379,15 @@ A partir de ahí, `sar` muestra estadísticas históricas (CPU, memoria, disco, 
 Para alertas básicas sin instalar herramientas complejas, un script en `/etc/cron.hourly/` que verifica condiciones críticas y envía correo si algo está mal es suficiente.
 
 ```bash
-# Bajarse la plantilla de /etc/cron.hourly/server-check
-sudo wget https://raw.githubusercontent.com/noggalito/manuales/refs/heads/main/assets/plantilla-etc-cron.hourly-server-check.txt -O /etc/cron.hourly/server-check
+# Descargar la plantilla (requiere SHA_COMMIT y ASSETS_BASE definidos según §A.1.1)
+wget "${ASSETS_BASE}/plantilla-etc-cron.hourly-server-check.txt" \
+    -O /tmp/plantilla-etc-cron.hourly-server-check.txt
+
+# Verificar integridad antes de instalar un script que se ejecutará como root cada hora
+echo "<SHA256-ESPERADO>  /tmp/plantilla-etc-cron.hourly-server-check.txt" | sha256sum -c \
+  || { echo "✗ ERROR: hash no coincide — NO instalar este script"; exit 1; }
+
+sudo cp /tmp/plantilla-etc-cron.hourly-server-check.txt /etc/cron.hourly/server-check
 ```
 Permisos:
 
@@ -3281,6 +3561,7 @@ do_backup() {
         --exclude '/var/cache/*' \
         --exclude '/var/tmp/*' \
         --exclude '/var/lib/apt/lists/*' \
+        --exclude '/var/log/journal/*' \
         "${repo}::${ARCHIVE_NAME}" \
         /etc /root /home /var/spool/cron /var/log
 
@@ -3304,9 +3585,14 @@ Permisos y passphrase:
 
 ```bash
 sudo chmod 700 /usr/local/sbin/borg-backup.sh
-sudo bash -c 'echo "tu-passphrase-segura" > /root/.borg-passphrase'
+
+# Crear el archivo de passphrase sin que el valor aparezca en el historial del shell
+# read -s no hace eco de lo que se escribe; printf no añade newline final
+sudo bash -c 'read -rsp "Passphrase para Borg (no se mostrará): " PHRASE && printf "%s" "$PHRASE" > /root/.borg-passphrase'
 sudo chmod 600 /root/.borg-passphrase
 ```
+
+> **`/var/log/journal/*` excluido:** el journal de systemd ya tiene su propia retención configurada en la sección 16.1.1 y puede ser de cientos de MB. Incluirlo en el respaldo diario lo haría crecer rápidamente sin valor proporcional de recuperación (el journal es diagnóstico, no datos de negocio). Los demás subdirectorios de `/var/log` (logs de aplicaciones rotados) sí se incluyen porque pueden tener valor forense o de auditoría.
 
 Política de retención:
 
@@ -3639,18 +3925,45 @@ Este anexo concentra en un solo lugar la lista completa de plantillas referencia
 
 #### A.1 Convenciones del sistema de plantillas
 
-Las plantillas están en `https://raw.githubusercontent.com/noggalito/manuales/refs/heads/main/assets/`. El nombre del archivo de plantilla refleja la ruta de destino con guiones en lugar de barras. Por ejemplo, `plantilla-etc-ssh-sshd_config.d-99-hardening.conf.txt` se despliega en `/etc/ssh/sshd_config.d/99-hardening.conf`.
+Las plantillas están en el repositorio `https://github.com/noggalito/manuales/`, bajo el directorio `assets/`. El nombre del archivo de plantilla refleja la ruta de destino con guiones en lugar de barras. Por ejemplo, `plantilla-etc-ssh-sshd_config.d-99-hardening.conf.txt` se despliega en `/etc/ssh/sshd_config.d/99-hardening.conf`.
 
 Las variables dentro de las plantillas usan el prefijo `$` y se sustituyen con `sed` antes de copiar al destino:
 
 ```bash
 # Patrón general
 export MIVARIABLE=valor
-wget https://raw.githubusercontent.com/noggalito/manuales/refs/heads/main/assets/<plantilla>.txt -O /tmp/<plantilla>.txt
+wget "${ASSETS_BASE}/<plantilla>.txt" -O /tmp/<plantilla>.txt
+echo "<SHA256-ESPERADO>  /tmp/<plantilla>.txt" | sha256sum -c \
+  || { echo "✗ ERROR: hash no coincide — NO aplicar este archivo"; exit 1; }
 sed -e "s|\$MIVARIABLE|${MIVARIABLE}|g" /tmp/<plantilla>.txt | sudo tee /<ruta-destino> > /dev/null
 ```
 
 Todas las plantillas del repositorio se mantienen con saltos de línea LF (Unix) gracias al archivo `.gitattributes` en la raíz del repositorio. Esto evita que un script descargado falle por shebang con CRLF si el repositorio fuera editado desde un sistema Windows.
+
+##### A.1.1 Modelo de seguridad: anclaje a commit SHA y verificación de integridad
+
+Las URLs que usan `refs/heads/main` apuntan a la punta de la rama, que es mutable: si el repositorio fuera comprometido, las instalaciones futuras recibirían contenido diferente sin saberlo. Para mitigar esto, el manual usa un commit SHA fijo (`SHA_COMMIT`) como referencia inmutable.
+
+**Configuración inicial (ejecutar una sola vez antes de la primera plantilla):**
+
+```bash
+# Obtener el SHA del commit que se desea anclar.
+# Opción A — si se tiene git instalado localmente:
+#   git ls-remote https://github.com/noggalito/manuales.git HEAD | awk '{print $1}'
+# Opción B — consultar la página de commits en GitHub y copiar el SHA completo (40 caracteres)
+#   https://github.com/noggalito/manuales/commits/main
+
+export SHA_COMMIT="<REEMPLAZAR-POR-SHA-DE-40-CARACTERES>"
+export ASSETS_BASE="https://raw.githubusercontent.com/noggalito/manuales/${SHA_COMMIT}/assets"
+
+# Verificar que la variable quedó definida
+echo "SHA_COMMIT = ${SHA_COMMIT}"
+echo "ASSETS_BASE = ${ASSETS_BASE}"
+```
+
+> **Nota sobre los placeholders `<SHA256-ESPERADO>`:** la primera vez que se descarga una plantilla para un `SHA_COMMIT` dado, el hash aún no se conoce. El flujo es: descargar → calcular hash con `sha256sum /tmp/<plantilla>.txt` → anotar el resultado → usar ese valor en ejecuciones futuras para verificar coherencia. Para un despliegue único no es estrictamente necesario conocer el hash de antemano, pero sí es importante anclar el commit SHA para garantizar reproducibilidad.
+
+> Si los valores de las variables contienen caracteres especiales (barras, pipes, ampersands), los comandos `sed` de sustitución pueden romperse. Los valores problemáticos para el delimitador `|` son los que contienen `|` literales; en la práctica los valores de hostname, usuario y puerto raramente los contienen, pero se debe verificar antes de ejecutar.
 
 #### A.2 Inventario de plantillas
 
@@ -3663,7 +3976,7 @@ Todas las plantillas del repositorio se mantienen con saltos de línea LF (Unix)
 | `plantilla-etc-modprobe.d-99-hardening.conf.txt` | 11.3 | `/etc/modprobe.d/99-hardening.conf` | (sin variables) |
 | `plantilla-etc-audit-rules.d-99-hardening.rules.txt` | 12.1 | `/etc/audit/rules.d/99-hardening.rules` | (sin variables) |
 | `plantilla-etc-cron.hourly-server-check.txt` | 17.2 | `/etc/cron.hourly/server-check` | (sin variables) |
-| `plantilla-etc-msmtprc.txt` | C.4 | `/etc/msmtprc` | `$MIRELAY`, `$MIPUERTO`, `$MIUSUARIO_SMTP`, `$MIFROM` |
+| `plantilla-etc-msmtprc.txt` | C.4 | `/etc/msmtprc` | `$MIRELAY`, `$MIPUERTO_SMTP` (shell) → `$MIPUERTO` (plantilla), `$MIUSUARIO_SMTP`, `$MIFROM` |
 | `plantilla-etc-msmtp-aliases.txt` | C.6 | `/etc/msmtp/aliases` | `$MIDESTINO` |
 
 #### A.3 Resumen de variables del manual
@@ -3676,10 +3989,12 @@ A lo largo del manual se usan variables de entorno para personalizar las plantil
 | `$MIUSUARIO` | Usuario administrativo | `usuario` |
 | `$MIPUERTO` | Puerto SSH personalizado (también usado por fail2ban) | `17177` |
 | `$MIRELAY` | Hostname del relay SMTP saliente | `smtp.gmail.com` |
-| `$MIPUERTO` (en C) | Puerto SMTP del relay | `587` |
+| `$MIPUERTO_SMTP` | Puerto SMTP del relay (Anexo C — distinto de `$MIPUERTO`) | `587` |
 | `$MIUSUARIO_SMTP` | Usuario para autenticarse contra el relay | `cuenta@dominio.com` |
 | `$MIFROM` | Dirección "From" autorizada en el relay | `cuenta@dominio.com` |
 | `$MIDESTINO` | Dirección externa donde llega el correo del sistema | `admin@dominio.com` |
+| `$SHA_COMMIT` | SHA del commit del repositorio de plantillas anclado | `a1b2c3d4...` (40 chars) |
+| `$ASSETS_BASE` | URL base para descarga de plantillas (derivada de `SHA_COMMIT`) | `https://raw.githubusercontent.com/.../assets` |
 
 Conviene anotar los valores efectivos usados en este servidor concreto en el inventario del repositorio operativo (sección 19.1). Esto facilita reconstruir o auditar el servidor más adelante sin tener que adivinar qué se sustituyó en qué momento.
 
@@ -3987,16 +4302,21 @@ Definir variables del relay y descargar la plantilla:
 
 ```bash
 export MIRELAY=smtp.gmail.com
-export MIPUERTO=587
+export MIPUERTO_SMTP=587    # Puerto SMTP — usar este nombre para no colisionar con $MIPUERTO (puerto SSH)
 export MIUSUARIO_SMTP=tu-cuenta@gmail.com
 export MIFROM=tu-cuenta@gmail.com
 
-# Bajarse la plantilla
-wget https://raw.githubusercontent.com/noggalito/manuales/refs/heads/main/assets/plantilla-etc-msmtprc.txt -O /tmp/plantilla-etc-msmtprc.txt
+# Descargar la plantilla (requiere SHA_COMMIT y ASSETS_BASE definidos según §A.1.1)
+wget "${ASSETS_BASE}/plantilla-etc-msmtprc.txt" -O /tmp/plantilla-etc-msmtprc.txt
+
+# Verificar integridad
+echo "<SHA256-ESPERADO>  /tmp/plantilla-etc-msmtprc.txt" | sha256sum -c \
+  || { echo "✗ ERROR: hash no coincide — NO aplicar este archivo"; exit 1; }
 
 # Reemplazar variables y generar el archivo en destino
+# Nota: la plantilla usa $MIPUERTO internamente; el sed lo sustituye por el valor de $MIPUERTO_SMTP
 sed -e "s|\$MIRELAY|${MIRELAY}|g" \
-    -e "s|\$MIPUERTO|${MIPUERTO}|g" \
+    -e "s|\$MIPUERTO|${MIPUERTO_SMTP}|g" \
     -e "s|\$MIUSUARIO_SMTP|${MIUSUARIO_SMTP}|g" \
     -e "s|\$MIFROM|${MIFROM}|g" \
     /tmp/plantilla-etc-msmtprc.txt \
@@ -4015,7 +4335,7 @@ Si el relay es Gmail (cuenta personal o de Google Workspace), las variables a us
 
 ```bash
 export MIRELAY=smtp.gmail.com
-export MIPUERTO=587
+export MIPUERTO_SMTP=587    # Puerto SMTP — distinto de $MIPUERTO (puerto SSH)
 export MIUSUARIO_SMTP=tu-cuenta@gmail.com
 export MIFROM=tu-cuenta@gmail.com
 ```
@@ -4277,7 +4597,7 @@ sudo journalctl -t msmtp --since "1 hour ago"
 sudo journalctl --verify
 ```
 
-journald aplica automáticamente la rotación y retención configurada en sección 16.1 (`MaxRetentionSec=3month`, `SystemMaxUse=2G`). No se requiere logrotate adicional.
+journald aplica automáticamente la rotación y retención configurada en sección 16.1 (`MaxRetentionSec=3month`, `SystemMaxUse=1G` para el LV mínimo). No se requiere logrotate adicional.
 
 Si por algún motivo se prefiere un logfile dedicado para msmtp (no es la recomendación del manual base, pero puede ser útil en debugging puntual o en escenarios con auditoría específica), descomentar la línea correspondiente en `/etc/msmtprc` y crear el archivo con permisos compatibles:
 
