@@ -1,0 +1,149 @@
+# .markdownlint.yaml
+# Configuración para manuales técnicos noggalito
+# Alineada con la convención: etapas, secciones numeradas, checklists de cierre,
+# bloques bash con salidas sin lenguaje, mínima negrita, sin emojis.
+#
+# Documentación de reglas: https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+
+# Hereda de las reglas por defecto y desactiva/ajusta selectivamente.
+default: true
+
+# ── Longitud de línea ───────────────────────────────────────────────────────
+# Los manuales noggalito mezclan prosa explicativa con URLs largas, rutas
+# absolutas y outputs de comandos. Imponer wrap rígido empeora la legibilidad
+# del fuente. Se desactiva.
+MD013: false
+
+# ── Encabezados ─────────────────────────────────────────────────────────────
+# MD003: estilo de encabezado consistente (ATX `#`, no Setext `===`).
+MD003:
+  style: "atx"
+
+# MD022: encabezados rodeados por líneas en blanco. Sí, lo queremos.
+MD022:
+  lines_above: 1
+  lines_below: 1
+
+# MD024: encabezados duplicados. En el corpus noggalito aparece varias veces
+# "Checklist de cierre" como subsección X.N de cada sección numerada — es
+# intencional y forma parte de la convención. Permitir duplicados si están
+# en ramas distintas (siblings_only).
+MD024:
+  siblings_only: true
+
+# MD025: un solo H1 por documento. Correcto, el título del manual es único.
+MD025: true
+
+# MD026: signos de puntuación al final de encabezados. Permitimos `:` porque
+# encabezados de diagnóstico ("B.2 Síntoma: el servidor está lento") lo usan.
+MD026:
+  punctuation: ".,;!?"
+
+# MD036: prohibir énfasis usado como pseudo-encabezado. Importante en
+# noggalito: la convención dice usar negrita SOLO para énfasis real, no
+# para decorar.
+MD036: true
+
+# ── Listas ──────────────────────────────────────────────────────────────────
+# MD004: estilo de bullet uniforme. Usamos `-` (guión) en todo el corpus.
+MD004:
+  style: "dash"
+
+# MD007: indentación de listas anidadas. 2 espacios es lo estándar de
+# CommonMark y lo que renderiza igual en GitHub/Gitea/MkDocs.
+MD007:
+  indent: 2
+
+# MD029: numeración de listas ordenadas. El corpus usa numeración corrida
+# real (1., 2., 3.) — no "1., 1., 1." con autoincrement. Forzamos `ordered`.
+MD029:
+  style: "ordered"
+
+# MD030: espacios después del marcador de lista. Default (1 espacio) está bien.
+MD030: true
+
+# MD032: listas rodeadas por líneas en blanco. Sí.
+MD032: true
+
+# ── Código ──────────────────────────────────────────────────────────────────
+# MD040: bloques de código deben declarar lenguaje. La convención noggalito
+# es intencionalmente híbrida: bloques de COMANDO llevan `bash`, bloques
+# de SALIDA ESPERADA van SIN lenguaje (para que se vean visualmente
+# distintos en el render). Por tanto MD040 se desactiva — si la activáramos
+# nos forzaría a etiquetar las salidas como `text` o `plain`, rompiendo
+# la distinción visual.
+MD040: false
+
+# MD046: estilo de bloques de código. Siempre fenced (```), nunca indentado.
+MD046:
+  style: "fenced"
+
+# MD048: estilo de fence. Backticks (```), no tildes (~~~).
+MD048:
+  style: "backtick"
+
+# ── HTML inline ─────────────────────────────────────────────────────────────
+# MD033: prohibir HTML inline. El corpus usa <p style="text-align: center">
+# y <img> para el logo en la cabecera, además de <br> ocasional. Permitimos
+# solo el subset estrictamente necesario.
+MD033:
+  allowed_elements:
+    - p
+    - img
+    - br
+    - details
+    - summary
+
+# ── Enlaces e imágenes ──────────────────────────────────────────────────────
+# MD034: URLs desnudas. El corpus a veces pega URLs literales en outputs
+# o comentarios — pero en prosa deberían ir en formato [texto](url).
+MD034: true
+
+# MD039: espacios dentro de texto de enlace. `[ texto ](url)` mal.
+MD039: true
+
+# MD042: enlaces vacíos. `[texto]()` mal.
+MD042: true
+
+# MD045: imágenes deben tener alt text. La cabecera con el logo ya lleva
+# `alt="<alt>"` en la plantilla, así que esto refuerza la convención.
+MD045: true
+
+# ── Encabezado de primer nivel ──────────────────────────────────────────────
+# MD041: primera línea no-vacía debe ser H1. Correcto, todos los manuales
+# empiezan con `# <Título>`.
+MD041: true
+
+# ── Espaciado y formato ─────────────────────────────────────────────────────
+# MD009: trailing spaces. No los queremos (excepto el `  ` de hard break,
+# que sí permitimos con br_spaces: 2).
+MD009:
+  br_spaces: 2
+  list_item_empty_lines: false
+
+# MD010: tabs duros. El corpus usa espacios.
+MD010:
+  code_blocks: true
+
+# MD012: múltiples líneas en blanco consecutivas. Máximo 1.
+MD012:
+  maximum: 1
+
+# MD047: archivo debe terminar con newline. Sí.
+MD047: true
+
+# ── Énfasis ─────────────────────────────────────────────────────────────────
+# MD049: estilo de cursiva. Asterisco (*texto*) — más común y consistente
+# con el corpus.
+MD049:
+  style: "asterisk"
+
+# MD050: estilo de negrita. Doble asterisco (**texto**).
+MD050:
+  style: "asterisk"
+
+# MD037: espacios dentro de marcadores de énfasis. `** texto **` mal.
+MD037: true
+
+# MD038: espacios dentro de código inline. `` ` texto ` `` mal.
+MD038: true

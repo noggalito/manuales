@@ -1,0 +1,30 @@
+# .markdownlintignore
+# Patrones de archivos/directorios que markdownlint NO debe revisar.
+
+# Dependencias y artefactos
+node_modules/
+.git/
+dist/
+build/
+.cache/
+
+# Assets y contenido generado
+assets/
+**/assets/
+
+# Archivos de plantilla con placeholders intencionalmente "rotos"
+**/plantilla-*.md
+**/template-*.md
+
+# Outputs de generadores estáticos (si en algún momento usas MkDocs/Hugo)
+site/
+public/
+
+# Manuales en borrador (opcional, descomenta si los marcas con prefijo)
+# **/_draft-*.md
+# **/WIP-*.md
+
+# READMEs autogenerados que no sigan la convención noggalito
+# (descomentar si aplica)
+# **/CHANGELOG.md
+# **/CONTRIBUTING.md
