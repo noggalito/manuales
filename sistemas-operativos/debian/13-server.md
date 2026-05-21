@@ -4,35 +4,33 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 
 <p style="text-align: center"><img src="./assets/logo debian.png" style="width: 25%;" alt="Debian" /></p>
 
-
 **Autor:** [Calú](https://github.com/calu777)  
 **Fecha de inicio:** 2026-04-19  
 **Última actualización:** 2026-05-20  
-**Versión:** 0.3   
+**Versión:** 0.3
 
 ## a. Historial de cambios
 
-* [0.3] – 2026-05-20
-  * Seguridad: URLs de plantillas migradas a SHA anclado + verificación sha256sum; nuevo hardening de sudo/pam_faillock; refuerzo SSH con   DisableForwarding; passphrase de Borg protegida con read -s.
-  * Correcciones: SystemMaxUse de journald reducido a 1 G; nota sobre PASS_MIN_LEN ignorado con pam_pwquality; variable $MIPUERTO_SMTP para evitar colisión; LUKS2/Argon2id/GRUB aclarado; sed de dropbear reemplazado por secuencia robusta; fixes de numeración y typo.
-  * Mejoras: nueva §12.6 con auditoría lynis; soporte NTS en chrony; pool NTP por país; nota de egreso en UFW; referencias cruzadas entre MTA, fail2ban y pam_faillock.
-
-* [0.2] – 2026-05-16
-  * Actualización de Debian 13.4 a 13.5
-  * Inclusión del override en C.6.1
-* [0.1] – 2026-04-28
-  * Manual terminado para la versión 13.4.0 de Debian
+- [0.3] – 2026-05-20
+  - Seguridad: URLs de plantillas migradas a SHA anclado + verificación sha256sum; nuevo hardening de sudo/pam_faillock; refuerzo SSH con   DisableForwarding; passphrase de Borg protegida con read -s.
+  - Correcciones: SystemMaxUse de journald reducido a 1 G; nota sobre PASS_MIN_LEN ignorado con pam_pwquality; variable $MIPUERTO_SMTP para evitar colisión; LUKS2/Argon2id/GRUB aclarado; sed de dropbear reemplazado por secuencia robusta; fixes de numeración y typo.
+  - Mejoras: nueva §12.6 con auditoría lynis; soporte NTS en chrony; pool NTP por país; nota de egreso en UFW; referencias cruzadas entre MTA, fail2ban y pam_faillock.
+- [0.2] – 2026-05-16
+  - Actualización de Debian 13.4 a 13.5
+  - Inclusión del override en C.6.1
+- [0.1] – 2026-04-28
+  - Manual terminado para la versión 13.4.0 de Debian
 
 ## b. To-do
 
-* Nuevo manual de reenvío de logs a un servidor central con `systemd-journal-upload` y `systemd-journal-remote`
-* Más precisión y profundidad en el uso de `borg` para respaldos
-* Inclusión de Ansible
+- Nuevo manual de reenvío de logs a un servidor central con `systemd-journal-upload` y `systemd-journal-remote`
+- Más precisión y profundidad en el uso de `borg` para respaldos
+- Inclusión de Ansible
 
 ## c. Requerimientos previos
 
-* Llave SSH Ed25519 para el punto "4.2 Copia de la llave pública del administrador". Manual para generarla disponible [aquí](https://github.com/noggalito/manuales/blob/main/ssh-ed25519.md)
-* Una cuenta de correo electrónico (a veces con contraseña por aplicación) desde donde se enviarán las notificaciones del servidor
+- Llave SSH Ed25519 para el punto "4.2 Copia de la llave pública del administrador". Manual para generarla disponible [aquí](https://github.com/noggalito/manuales/blob/main/ssh-ed25519.md)
+- Una cuenta de correo electrónico (a veces con contraseña por aplicación) desde donde se enviarán las notificaciones del servidor
 
 ---
 
@@ -56,12 +54,13 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [2.3 Selección de paquetes durante la instalación](#23-selección-de-paquetes-durante-la-instalación)
 - [2.4 Unlock remoto de LUKS (opcional, solo si se usó cifrado)](#24-unlock-remoto-de-luks-opcional-solo-si-se-usó-cifrado)
 - [2.5 Primer arranque y verificación básica](#25-primer-arranque-y-verificación-básica)
+- [2.6 Checklist de cierre de la Etapa I](#26-checklist-de-cierre-de-la-etapa-i)
 
 ### Etapa II — Configuración base del sistema
 
 #### 3. Preparación mínima para administración
 
-- [3.1 Diagnóstico: ¿está `sudo` instalado?](#31-diagnóstico-está-sudo-instalado)
+- [3.1 Diagnóstico de instalación de `sudo`](#31-diagnóstico-de-instalación-de-sudo)
 - [3.2 Instalación de `sudo`](#32-instalación-de-sudo)
 - [3.3 Activación de la pertenencia al grupo](#33-activación-de-la-pertenencia-al-grupo)
 - [3.4 Checklist de cierre](#34-checklist-de-cierre)
@@ -100,7 +99,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [7.4 Política de contraseñas](#74-política-de-contraseñas)
 - [7.5 Creación de usuarios adicionales (si aplica)](#75-creación-de-usuarios-adicionales-si-aplica)
 - [7.6 Bloqueo de la cuenta de root](#76-bloqueo-de-la-cuenta-de-root)
-- [7.7 Checklist de cierre de la parte II](#77-checklist-de-cierre-de-la-parte-ii)
+- [7.7 Checklist de cierre de la Etapa II](#77-checklist-de-cierre-de-la-etapa-ii)
 
 ### Etapa III — Hardening
 
@@ -156,7 +155,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [13.3 Añadir perfiles adicionales](#133-añadir-perfiles-adicionales)
 - [13.4 Checklist de cierre](#134-checklist-de-cierre)
 
-#### [Cierre de la Parte III](#cierre-de-la-parte-iii)
+#### [Cierre de la Etapa III](#cierre-de-la-etapa-iii)
 
 ### Etapa IV — Mantenimiento y actualizaciones
 
@@ -214,7 +213,7 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [19.4 Mantenimiento de la documentación](#194-mantenimiento-de-la-documentación)
 - [19.5 Checklist de cierre](#195-checklist-de-cierre)
 
-#### [Cierre de la Parte IV](#cierre-de-la-parte-iv)
+#### [Cierre de la Etapa IV](#cierre-de-la-etapa-iv)
 
 ### Anexos
 
@@ -254,7 +253,6 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 - [C.12 Consideraciones de seguridad](#c12-consideraciones-de-seguridad)
 - [C.13 Logs](#c13-logs)
 - [C.14 Checklist de cierre](#c14-checklist-de-cierre)
-
 
 ---
 
@@ -297,7 +295,6 @@ DF9B 9C49 EAA9 2984 3258  9D76 DA87 E80D 6294 BE9B
 
 #### 1.3 Descarga de ISO y archivos de verificación
 
-
 ```bash
 wget -c "${MIRROR}/SHA512SUMS"
 wget -c "${MIRROR}/SHA512SUMS.sign"
@@ -337,13 +334,13 @@ Resultado esperado:
 debian-13.5.0-amd64-netinst.iso: La suma coincide
 ```
 
-La opción `--ignore-missing` evita mensajes de error por las decenas de otras 
-ISOs listadas en `SHA512SUMS` que no se descargaron (DVD completo, arquitecturas 
+La opción `--ignore-missing` evita mensajes de error por las decenas de otras
+ISOs listadas en `SHA512SUMS` que no se descargaron (DVD completo, arquitecturas
 alternativas, etc.).
 
 #### 1.6 Verificación integral (opcional, para scripts)
 
-Si se automatiza la descarga, conviene validar todo el flujo con códigos de 
+Si se automatiza la descarga, conviene validar todo el flujo con códigos de
 salida explícitos:
 
 ```bash
@@ -392,12 +389,12 @@ En VPS este parámetro suele estar fijado por el proveedor y no es negociable. E
 
 Para un servidor base Debian 13 sin servicios adicionales:
 
-| Recurso | Mínimo | Recomendado base |
-|---|---|---|
-| CPU | 1 vCPU | 2 vCPU |
-| RAM | 512 MB | 1–2 GB |
-| Disco | 8 GB | 20 GB |
-| Red | 1 interfaz | 1 interfaz |
+| Recurso | Mínimo     | Recomendado base |
+|---------|------------|------------------|
+| CPU     | 1 vCPU     | 2 vCPU           |
+| RAM     | 512 MB     | 1–2 GB           |
+| Disco   | 8 GB       | 20 GB            |
+| Red     | 1 interfaz | 1 interfaz       |
 
 El dimensionamiento real depende del rol final (mail, web, Odoo, etc.) y se ajusta en los manuales específicos que extiendan éste.
 
@@ -464,13 +461,13 @@ El proveedor entrega un particionado simple (usualmente una sola partición `/` 
 
 En la pantalla de selección de software (`tasksel`), la recomendación para un servidor base es dejar marcado solo lo estrictamente necesario:
 
-| Tarea | Marcar | Motivo |
-|---|---|---|
-| Debian desktop environment | ❌ No | Un servidor no necesita GUI |
-| ...y subvariantes (GNOME, KDE, etc.) | ❌ No | Ídem |
-| web server | ❌ No | Se instala según rol en manuales específicos |
-| SSH server | ✅ Sí | Acceso remoto desde el primer arranque |
-| standard system utilities | ✅ Sí | Herramientas básicas (`less`, `bzip2`, `wget`, etc.) |
+| Tarea                                | Marcar | Motivo                                                |
+|--------------------------------------|--------|-------------------------------------------------------|
+| Debian desktop environment           | ❌ No  | Un servidor no necesita GUI                           |
+| ...y subvariantes (GNOME, KDE, etc.) | ❌ No  | Ídem                                                  |
+| web server                           | ❌ No  | Se instala según rol en manuales específicos          |
+| SSH server                           | ✅ Sí  | Acceso remoto desde el primer arranque                |
+| standard system utilities            | ✅ Sí  | Herramientas básicas (`less`, `bzip2`, `wget`, etc.)  |
 
 No se marca `web server`, `print server`, ni ningún rol específico aunque se sepa que el servidor será, por ejemplo, un web server. La razón es que `tasksel` instala versiones y combinaciones de paquetes que luego complican la instalación específica (por ejemplo, Apache cuando se quería Nginx). Los roles se instalan limpios en los manuales que extienden éste.
 
@@ -479,7 +476,6 @@ El momento de escoger el kernel -en caso de que el instalador permita esta opci�
 En tipo de initrd seleccionar `genérico`. Garantiza que el sistema arranque si se migra a otro hipervisor, se convierte en imagen portable, o se modifica el tipo de almacenamiento virtual. La opción `dirigido` solo se justifica en hardware fijo donde el tamaño del initrd es crítico.
 
 En VPS, esta pantalla no aparece (el sistema ya viene instalado). Se verifica en la sección 2.5 que no haya servicios innecesarios corriendo y se purgan si es necesario.
-
 
 #### 2.4 Unlock remoto de LUKS (opcional, solo si se usó cifrado)
 
@@ -572,12 +568,14 @@ cat /etc/machine-id
 ```
 
 > **VMs clonadas:** si este servidor proviene de una plantilla o clon, regenerar `machine-id`:
+>
 > ```bash
 > sudo rm /etc/machine-id /var/lib/dbus/machine-id
 > sudo systemd-machine-id-setup
 > sudo dbus-uuidgen --ensure
 > sudo reboot
 > ```
+>
 > Omitir este paso causa problemas sutiles con logs, DHCP leases duplicadas y systemd.
 
 ##### 2.5.2 Revisión del arranque
@@ -637,9 +635,9 @@ ssh usuario@ip.del.servidor
 
 Este acceso en este momento es con la configuración por defecto del instalador (puerto 22, password auth posiblemente habilitado). El hardening de SSH se hace en la sección 8, pero la verificación de que el canal funciona se hace aquí.
 
-##### 2.5.6 Checklist de cierre de la sección 2
+#### 2.6 Checklist de cierre de la Etapa I
 
-Antes de pasar a la sección 3, confirmar:
+Antes de pasar a la Etapa II, confirmar:
 
 - [ ] Sistema arranca sin errores (`systemctl --failed` vacío)
 - [ ] `/etc/os-release` indica Debian 13 (Trixie)
@@ -652,7 +650,6 @@ Antes de pasar a la sección 3, confirmar:
 - [ ] Reloj del sistema razonablemente correcto (`date`)
 
 Solo con todos estos puntos verificados tiene sentido avanzar al hardening, porque el hardening asume un sistema funcional.
-
 
 #### Notas sobre el enfoque generalista
 
@@ -674,7 +671,7 @@ Solo con todos estos puntos verificados tiene sentido avanzar al hardening, porq
 
 Esta parte lleva al sistema recién instalado desde un estado "arranca y es accesible" a un estado "utilizable como servidor administrable de forma estándar". Cubre la instalación de herramientas administrativas básicas, el acceso remoto, la identidad del sistema, los repositorios y usuarios.
 
-El hardening propiamente dicho (SSH endurecido, firewall, fail2ban, sysctl, etc.) corresponde a la parte III. Aquí solo se prepara el terreno.
+El hardening propiamente dicho (SSH endurecido, firewall, fail2ban, sysctl, etc.) corresponde a la Etapa III. Aquí solo se prepara el terreno.
 
 ---
 
@@ -684,7 +681,7 @@ Debian instalado desde ISO `netinst` con contraseña de root definida no incluye
 
 En VPS de nube y plantillas corporativas, lo normal es que `sudo` ya venga instalado y con el usuario administrativo añadido al grupo correspondiente. En ese caso, esta sección se verifica en pocos segundos.
 
-#### 3.1 Diagnóstico: ¿está `sudo` instalado?
+#### 3.1 Diagnóstico de instalación de `sudo`
 
 Desde la sesión del usuario administrativo:
 
@@ -694,11 +691,11 @@ sudo -V 2>/dev/null | head -1
 
 Tres posibles resultados:
 
-| Resultado | Estado | Acción |
-|---|---|---|
-| `Sudo version 1.9.x ...` | Instalado y funcional | Saltar a 3.3 |
-| `-bash: sudo: orden no encontrada` | No instalado | Continuar con 3.2 |
-| Instalado pero `usuario is not in the sudoers file` | Instalado sin permisos | Ir a 3.2.2 |
+| Resultado                                           | Estado                 | Acción              |
+|-----------------------------------------------------|------------------------|---------------------|
+| `Sudo version 1.9.x ...`                            | Instalado y funcional  | Saltar a 3.3        |
+| `-bash: sudo: orden no encontrada`                  | No instalado           | Continuar con 3.2   |
+| Instalado pero `usuario is not in the sudoers file` | Instalado sin permisos | Ir a 3.2.2          |
 
 #### 3.2 Instalación de `sudo`
 
@@ -767,7 +764,7 @@ sudo -v
 
 ### 4. Acceso remoto inicial
 
-Esta sección asegura que el servidor es accesible por SSH con llave pública desde el equipo del administrador, usando todavía la configuración por defecto del instalador (puerto 22, password auth habilitado). El endurecimiento de SSH se hace en la parte III.
+Esta sección asegura que el servidor es accesible por SSH con llave pública desde el equipo del administrador, usando todavía la configuración por defecto del instalador (puerto 22, password auth habilitado). El endurecimiento de SSH se hace en la Etapa III.
 
 En VPS y VMs donde ya estás conectado por SSH (como seguramente es el caso), esta sección se reduce a formalizar el acceso por llave pública antes de desactivar el password auth en hardening.
 
@@ -855,14 +852,13 @@ tmux attach -t admin
 
 Finalmente, para cerrar la sesión `tmux` y regresar a la sesión SSH original: `Ctrl+b` luego `d`
 
-Este hábito se consolida en la parte III cuando se cambia el puerto SSH, se deshabilita password auth, y se activa el firewall.
+Este hábito se consolida en la Etapa III cuando se cambia el puerto SSH, se deshabilita password auth, y se activa el firewall.
 
 #### 4.5 Checklist de cierre
 
 - [ ] `ssh <usuario>@<ip>` entra sin pedir contraseña
 - [ ] Permisos de `~/.ssh` y `authorized_keys` correctos
 - [ ] Sesión de rescate documentada en una pestaña aparte
-
 
 ### 5. Configuración regional y de identidad
 
@@ -938,7 +934,7 @@ Verificación:
 date
 ```
 
-La sincronización NTP se configura en la parte IV (mantenimiento). En este punto basta con la zona horaria correcta.
+La sincronización NTP se configura en la Etapa IV (mantenimiento). En este punto basta con la zona horaria correcta.
 
 #### 5.4 Locales
 
@@ -1042,10 +1038,13 @@ Pasos:
 1. Anotar la MAC de la interfaz: `ip link show $MIIFAZ` (línea `link/ether ...`).
 2. En la interfaz del router, crear una reserva DHCP para esa MAC con la IP deseada.
 3. Renovar el lease desde el servidor:
+
    ```bash
    sudo systemctl restart networking
    ```
+
 4. Verificar que la IP asignada coincide con la reservada:
+
    ```bash
    ip -brief address show $MIIFAZ
    ```
@@ -1202,9 +1201,11 @@ EOF
 ```
 
 > **Atención:** un `/etc/resolv.conf` editado a mano será sobrescrito por `resolvconf`, `systemd-resolved` o el cliente DHCP la próxima vez que reciban una nueva configuración. Si se quiere fijarlo de forma realmente permanente sin instalar un gestor, se puede aplicar el atributo de inmutabilidad:
+>
 > ```bash
 > sudo chattr +i /etc/resolv.conf
 > ```
+>
 > Esto impide cualquier modificación, incluso por root, hasta que se quite el atributo con `sudo chattr -i /etc/resolv.conf`. Es una solución de fuerza bruta y conviene documentarla en el inventario del servidor (sección 19.1) para que no sorprenda a quien intente modificar la red en el futuro.
 
 ##### 5.5.7 Verificación final
@@ -1262,7 +1263,6 @@ Para instalaciones limpias (no clonadas), no hacer nada: el ID ya es único.
 - [ ] DNS resuelve correctamente
 - [ ] `machine-id` único (confirmado o regenerado)
 
-
 ### 6. Repositorios y primera actualización completa
 
 La ISO `netinst` instala un sistema mínimo con el CD-ROM como repositorio inicial. Esta sección ajusta `/etc/apt/sources.list` para usar los mirrors oficiales y deja el sistema completamente actualizado.
@@ -1300,7 +1300,6 @@ Notas sobre los componentes:
 - `contrib` — software libre pero con dependencias no libres.
 - `non-free` — software no libre (licencias propietarias). Se incluye en servidores solo si es necesario.
 - `non-free-firmware` — firmware no libre separado en Trixie por cambio de política. Recomendable mantenerlo activo para compatibilidad con hardware moderno (tarjetas de red, controladores, etc.).
-
 
 Las líneas `deb-src` (fuentes) se omiten por defecto en un servidor. Añadirlas solo si se van a compilar paquetes desde fuente.
 
@@ -1358,7 +1357,7 @@ sudo needrestart
 
 Esta sección formaliza la política de usuarios del servidor: confirma que el usuario administrativo tiene los grupos correctos, define política de contraseñas, y bloquea la cuenta de root.
 
-La configuración detallada de `sudo` (políticas en `/etc/sudoers.d/`, insults, pwfeedback, etc.) se ha dejado deliberadamente para la parte III (hardening), porque son decisiones de endurecimiento, no de configuración base.
+La configuración detallada de `sudo` (políticas en `/etc/sudoers.d/`, insults, pwfeedback, etc.) se ha dejado deliberadamente para la Etapa III (hardening), porque son decisiones de endurecimiento, no de configuración base.
 
 #### 7.1 Verificación del usuario administrativo
 
@@ -1438,6 +1437,7 @@ sudo chown root:root /etc/sudoers.d/99-hardening
 ```
 
 > **Sobre `requiretty`:** esta directiva puede romper herramientas de automatización sin TTY (Ansible, algunos scripts en systemd units). Si el servidor va a ser gestionado con una de estas herramientas, comentar esa línea o añadir una excepción por usuario:
+>
 > ```
 > Defaults:miusuario_ansible !requiretty
 > ```
@@ -1498,6 +1498,7 @@ auth    sufficient                      pam_faillock.so authsucc
 ```
 
 > **Atención:** la forma exacta de la línea `pam_unix.so` varía según las opciones instaladas en el sistema. Verificar el aspecto actual del archivo antes de editar. Si tras la modificación el login falla completamente, desde la sesión paralela (sección 4.4) ejecutar:
+>
 > ```bash
 > sudo cp /etc/pam.d/common-auth.ori /etc/pam.d/common-auth
 > ```
@@ -1602,7 +1603,7 @@ sudo passwd -S root
 Consecuencias del bloqueo:
 
 - `su -` ya no funciona pidiendo contraseña de root. Sigue funcionando como `sudo su -` o `sudo -i`.
-- No se puede iniciar sesión como root por consola ni por SSH (SSH además debe tener `PermitRootLogin no`, que se aplica en la parte III).
+- No se puede iniciar sesión como root por consola ni por SSH (SSH además debe tener `PermitRootLogin no`, que se aplica en la Etapa III).
 - Procesos del sistema que necesitan ejecutarse como root siguen funcionando sin cambios (cron, systemd, etc.).
 
 Si se quiere recuperar el acceso a root más adelante:
@@ -1613,7 +1614,7 @@ sudo passwd root
 
 Esto establece una contraseña nueva y desbloquea la cuenta. No requiere conocer la anterior.
 
-#### 7.7 Checklist de cierre de la parte II
+#### 7.7 Checklist de cierre de la Etapa II
 
 - [ ] Usuario administrativo con `sudo` y `adm` verificados
 - [ ] `/etc/sudoers.d/99-hardening` creado y validado con `visudo -c`
@@ -1622,9 +1623,9 @@ Esto establece una contraseña nueva y desbloquea la cuenta. No requiere conocer
 - [ ] Usuarios adicionales creados si aplica
 - [ ] Cuenta de root bloqueada (`passwd -l root`)
 - [ ] Acceso del usuario administrativo por SSH con llave confirmado funcional
-- [ ] Sesión de rescate abierta en paralelo (hábito para la parte III)
+- [ ] Sesión de rescate abierta en paralelo (hábito para la Etapa III)
 
-Con la parte II cerrada, el servidor es administrable con herramientas estándar, tiene identidad definida, repositorios correctos, está actualizado, y tiene política básica de usuarios. Está listo para la fase de endurecimiento (parte III).
+Con la Etapa II cerrada, el servidor es administrable con herramientas estándar, tiene identidad definida, repositorios correctos, está actualizado, y tiene política básica de usuarios. Está listo para la fase de endurecimiento (Etapa III).
 
 ---
 
@@ -1641,7 +1642,6 @@ Tres principios atraviesan toda esta parte:
 2. Cambio modular, no edición de archivos canónicos. Donde sea posible, los cambios van en archivos `*.conf` dentro de directorios `*.d/` (`/etc/ssh/sshd_config.d/`, `/etc/sysctl.d/`, `/etc/sudoers.d/`). Esto preserva los archivos originales del paquete, facilita los upgrades futuros, y permite revertir un cambio borrando un solo archivo.
 
 3. Probar antes de aplicar. Cada herramienta clave tiene un modo de validación (`sshd -t`, `ufw --dry-run`, `unattended-upgrades --dry-run`). Usarlo siempre antes de recargar o activar.
-
 
 ### 8. Hardening de SSH
 
@@ -1693,12 +1693,14 @@ sudo chown root:root /etc/ssh/sshd_config.d/99-hardening.conf
 Si el servidor está detrás de un firewall corporativo o un proveedor de nube con grupos de seguridad, es mandatorio abrir el nuevo puerto en ambos lados antes de reiniciar SSH.
 
 Antes de aplicar:
+
 - Abrir puerto en:
   - Firewall del proveedor
   - Security groups
   - Router/NAT
 
-Validar
+Validar:
+
 ```bash
 nc -zv <ip> <nuevo_puerto>
 ```
@@ -1729,13 +1731,13 @@ AllowUsers <usuario1> <usuario2>
 
 #### 8.4 Límites de sesión y timeouts
 
-| Directiva | Valor | Efecto |
-|---|---|---|
-| `MaxAuthTries 3` | 3 | El cliente se desconecta tras 3 intentos fallidos en una misma conexión. |
-| `MaxSessions 5` | 5 | Máximo de sesiones (canales) por conexión TCP. Suficiente para un humano. |
-| `LoginGraceTime 30` | 30 s | Tiempo máximo para completar el login. Corta sesiones que solo abren TCP. |
-| `ClientAliveInterval 300` | 5 min | Cada 5 min envía un keepalive cifrado al cliente. |
-| `ClientAliveCountMax 2` | 2 | Tras 2 keepalives sin respuesta (10 min), cierra la sesión. |
+| Directiva                 | Valor | Efecto                                                                       |
+|---------------------------|-------|------------------------------------------------------------------------------|
+| `MaxAuthTries 3`          | 3     | El cliente se desconecta tras 3 intentos fallidos en una misma conexión.     |
+| `MaxSessions 5`           | 5     | Máximo de sesiones (canales) por conexión TCP. Suficiente para un humano.    |
+| `LoginGraceTime 30`       | 30 s  | Tiempo máximo para completar el login. Corta sesiones que solo abren TCP.    |
+| `ClientAliveInterval 300` | 5 min | Cada 5 min envía un keepalive cifrado al cliente.                            |
+| `ClientAliveCountMax 2`   | 2     | Tras 2 keepalives sin respuesta (10 min), cierra la sesión.                  |
 
 `ClientAliveInterval` + `ClientAliveCountMax` cumplen dos propósitos: mantener la sesión viva contra firewalls que cortan conexiones inactivas, y desconectar sesiones zombies (atacante que abre conexión y la deja colgada).
 
@@ -1748,6 +1750,7 @@ DisableForwarding yes
 ```
 
 > Si en el futuro se necesita forwarding puntual (`ssh -L`), habilitar `AllowTcpForwarding` únicamente para el usuario que lo requiere con un bloque `Match User`, sin modificar la política base:
+>
 > ```
 > Match User operador-tuneles
 >     AllowTcpForwarding yes
@@ -2128,6 +2131,7 @@ echo "<SHA256-ESPERADO>  /tmp/plantilla-etc-sysctl.d-99-hardening.conf.txt" | sh
 
 sudo cp /tmp/plantilla-etc-sysctl.d-99-hardening.conf.txt /etc/sysctl.d/99-hardening.conf
 ```
+
 **Justificación de los más relevantes:**
 
 - `rp_filter = 1` — Reverse Path Filtering en modo estricto. Si un paquete llega desde una IP origen para la que la ruta de retorno usaría otra interfaz, se descarta. Bloquea spoofing trivial.
@@ -2191,9 +2195,11 @@ sudo cp /tmp/plantilla-etc-modprobe.d-99-hardening.conf.txt /etc/modprobe.d/99-h
 `install <modulo> /bin/true` hace que cualquier intento de cargar el módulo ejecute `/bin/true` (que termina con éxito sin hacer nada). Más limpio que `blacklist`, que solo evita la carga automática pero permite la carga explícita.
 
 > **Especial cuidado con USB storage en servidores físicos donde el operador usa pendrives administrativos.** No deshabilitar `usb-storage` si se necesita conectar discos externos para respaldos. En servidores de colocation o data center, donde nadie debería conectar nada físicamente, sí tiene sentido bloquearlo:
+>
 > ```
 > install usb-storage /bin/true
 > ```
+>
 > En VMs y VPS no aplica — no hay USB físico.
 
 **Aplicar:**
@@ -2283,6 +2289,7 @@ echo "<SHA256-ESPERADO>  /tmp/plantilla-etc-audit-rules.d-99-hardening.rules.txt
 
 sudo cp /tmp/plantilla-etc-audit-rules.d-99-hardening.rules.txt /etc/audit/rules.d/99-hardening.rules
 ```
+
 **Recargar reglas:**
 
 ```bash
@@ -2633,6 +2640,7 @@ Verificar también el parámetro de boot del kernel:
 ```bash
 cat /sys/kernel/security/lsm
 ```
+
 La salida debe incluir `apparmor` en la lista (típicamente junto con `lockdown`, `capability`, `landlock`, `yama` y otros). Si aparece, AppArmor está cargado y operativo.
 
 #### 13.2 Perfiles en `enforce` vs `complain`
@@ -2693,7 +2701,7 @@ Crear perfiles propios para aplicaciones custom (un script, un binario propio, u
 - [ ] `apparmor-profiles` instalado si se desean perfiles extra
 - [ ] Log de denegaciones revisado tras operación normal
 
-### Cierre de la Parte III
+### Cierre de la Etapa III
 
 Al terminar esta parte, el servidor está endurecido en sus capas críticas:
 
@@ -2706,9 +2714,10 @@ Al terminar esta parte, el servidor está endurecido en sus capas críticas:
 
 El servidor sigue siendo administrable y funcional. Las capas añadidas son transparentes para el operador legítimo y costosas para un atacante.
 
-La Parte IV (mantenimiento) se ocupa de mantener este estado en el tiempo: actualizaciones automáticas, sincronización de tiempo, rotación de logs, monitoreo, respaldos.
+La Etapa IV (mantenimiento) se ocupa de mantener este estado en el tiempo: actualizaciones automáticas, sincronización de tiempo, rotación de logs, monitoreo, respaldos.
 
 ---
+
 ## Etapa IV — Mantenimiento y actualizaciones
 
 Las partes I a III dejaron el servidor instalado, configurado y endurecido. Esta parte se ocupa de mantenerlo así en el tiempo. Un servidor endurecido en el día 1 deja de estarlo a los pocos meses si no se actualiza, si su reloj se desincroniza, si los logs desbordan el disco, si nadie repara en una caída de un servicio crítico, o si una falla de hardware sorprende sin un respaldo reciente.
@@ -2739,7 +2748,7 @@ sudo apt install -y unattended-upgrades apt-listchanges
 
 #### 14.2 Configuración de orígenes
 
-La configuración principal está en `/etc/apt/apt.conf.d/50unattended-upgrades`. El paquete viene con valores conservadores por defecto (solo `Debian-Security`). Esta sección lo amplía a security y updates, según la decisión documentada al inicio de la Parte IV.
+La configuración principal está en `/etc/apt/apt.conf.d/50unattended-upgrades`. El paquete viene con valores conservadores por defecto (solo `Debian-Security`). Esta sección lo amplía a security y updates, según la decisión documentada al inicio de la Etapa IV.
 
 Editar el archivo:
 
@@ -3019,6 +3028,7 @@ Significado:
 Para servidores en otras regiones, sustituir el código de país según <https://www.pool.ntp.org/zone/@>, y el pool regional por el correspondiente: `north-america`, `europe`, `asia`, `oceania`.
 
 > Si el servidor está en una red corporativa con servidor NTP propio, usar ese servidor en lugar de los pools públicos:
+>
 > ```
 > server ntp.empresa.local iburst
 > ```
@@ -3143,8 +3153,8 @@ ls -ld /var/log/journal/ 2>/dev/null && echo "Logs persistentes" || echo "Logs v
 
 `--disk-usage` muestra el espacio total ocupado, sin distinguir ubicación. La verificación del directorio sí es concluyente:
 
-* Si `/var/log/journal/` existe, los logs son persistentes y journald los escribe ahí.
-* Si no existe, los logs están en `/run/log/journal/` (tmpfs) y se pierden al reiniciar.
+- Si `/var/log/journal/` existe, los logs son persistentes y journald los escribe ahí.
+- Si no existe, los logs están en `/run/log/journal/` (tmpfs) y se pierden al reiniciar.
 
 Para un servidor, los logs deben ser persistentes. Si no lo son:
 
@@ -3389,6 +3399,7 @@ echo "<SHA256-ESPERADO>  /tmp/plantilla-etc-cron.hourly-server-check.txt" | sha2
 
 sudo cp /tmp/plantilla-etc-cron.hourly-server-check.txt /etc/cron.hourly/server-check
 ```
+
 Permisos:
 
 ```bash
@@ -3732,7 +3743,6 @@ Este procedimiento debe estar documentado en un runbook accesible incluso si el 
 - [ ] Prueba de restauración documentada
 - [ ] Procedimiento de restauración total escrito y guardado fuera del servidor
 
-
 ### 19. Documentación operativa
 
 Las secciones anteriores configuraron el servidor; esta deja por escrito qué se configuró, por qué, y cómo operarlo. Sin documentación, un servidor administrable se convierte en un servidor "que solo entiende quien lo desplegó" — y el día que esa persona no esté disponible (vacaciones, cambio de rol, accidente), la organización se queda sin capacidad real de operación.
@@ -3753,18 +3763,18 @@ El inventario es la "ficha técnica" del servidor: qué es, qué tiene, dónde e
 
 El inventario mínimo para un servidor base incluye:
 
-| Campo | Ejemplo | Origen |
-|---|---|---|
-| Hostname | `villonaco` | `hostnamectl` |
-| FQDN | `villonaco.lan` | `hostname -f` |
-| Rol | "Servidor base — sin rol específico aún" | manual / decisión del operador |
-| Ubicación física / proveedor | "VM local en estación de trabajo del admin" / "VPS en Hetzner FSN1" | conocida por el operador |
-| Sistema operativo | "Debian 13.5 Trixie" | `cat /etc/os-release` |
-| IP de gestión | `192.168.1.10/24` | `ip -brief address` |
-| Puerto SSH | `17177` | `/etc/ssh/sshd_config.d/99-hardening.conf` |
-| Usuario administrativo | `usuario` | manual |
-| Fecha de despliegue | `2026-05-27` | conocida por el operador |
-| Versión del manual seguido | `v0.2` | encabezado del manual |
+| Campo                        | Ejemplo                                                             | Origen                                     |
+|------------------------------|---------------------------------------------------------------------|--------------------------------------------|
+| Hostname                     | `villonaco`                                                         | `hostnamectl`                              |
+| FQDN                         | `villonaco.lan`                                                     | `hostname -f`                              |
+| Rol                          | "Servidor base — sin rol específico aún"                            | manual / decisión del operador             |
+| Ubicación física / proveedor | "VM local en estación de trabajo del admin" / "VPS en Hetzner FSN1" | conocida por el operador                   |
+| Sistema operativo            | "Debian 13.5 Trixie"                                                | `cat /etc/os-release`                      |
+| IP de gestión                | `192.168.1.10/24`                                                   | `ip -brief address`                        |
+| Puerto SSH                   | `17177`                                                             | `/etc/ssh/sshd_config.d/99-hardening.conf` |
+| Usuario administrativo       | `usuario`                                                           | manual                                     |
+| Fecha de despliegue          | `2026-05-27`                                                        | conocida por el operador                   |
+| Versión del manual seguido   | `v0.2`                                                              | encabezado del manual                      |
 
 Comandos útiles para extraer el inventario actualizado del servidor:
 
@@ -3863,10 +3873,12 @@ El procedimiento completo está en la sección 18.6, pero conviene tener el resu
 3. Listar los respaldos disponibles: `borg list <repositorio>`.
 4. Restaurar `/etc`, `/root`, `/home`, `/var/spool/cron`: `borg extract <repo>::<archivo>`.
 5. Reinstalar paquetes del archivo de selecciones:
+
    ```bash
    sudo cat /root/paquetes-completo.txt | sudo dpkg --set-selections
    sudo apt-get dselect-upgrade
    ```
+
 6. Restaurar datos específicos del rol (si los hubiese).
 7. Verificar servicios y reanudar operaciones.
 
@@ -3878,7 +3890,7 @@ Si SSH falla, fail2ban banea por error la IP del administrador, o un cambio en U
 
 - Cómo acceder a la consola física o a la consola del hypervisor / VPS.
 - Cómo reiniciar el servidor en modo single-user o rescue mode si fuera necesario.
-- Las credenciales de root (donde sea que estén guardadas, típicamente en el gestor de contraseñas de la organización; en este manual la cuenta de root está bloqueada al final de la Parte II, así que el acceso de emergencia es vía sudo desde el usuario administrativo, lo cual cambia el procedimiento).
+- Las credenciales de root (donde sea que estén guardadas, típicamente en el gestor de contraseñas de la organización; en este manual la cuenta de root está bloqueada al final de la Etapa II, así que el acceso de emergencia es vía sudo desde el usuario administrativo, lo cual cambia el procedimiento).
 - En caso de IP baneada por fail2ban: desde la consola física, ejecutar `sudo fail2ban-client unban <ip>` o `sudo fail2ban-client set sshd unbanip <ip>`.
 
 #### 19.4 Mantenimiento de la documentación
@@ -3897,8 +3909,7 @@ Documentación desactualizada es peor que no tenerla. Hay que cuidar el ciclo de
 - [ ] Versión del manual base usada anotada en el inventario
 - [ ] Procedimiento de actualización de la documentación acordado con el equipo
 
-
-### Cierre de la Parte IV
+### Cierre de la Etapa IV
 
 Al terminar esta parte, el servidor opera de forma sostenible y queda documentado:
 
@@ -3962,39 +3973,39 @@ echo "ASSETS_BASE = ${ASSETS_BASE}"
 ```
 
 > **Nota sobre los placeholders `<SHA256-ESPERADO>`:** la primera vez que se descarga una plantilla para un `SHA_COMMIT` dado, el hash aún no se conoce. El flujo es: descargar → calcular hash con `sha256sum /tmp/<plantilla>.txt` → anotar el resultado → usar ese valor en ejecuciones futuras para verificar coherencia. Para un despliegue único no es estrictamente necesario conocer el hash de antemano, pero sí es importante anclar el commit SHA para garantizar reproducibilidad.
-
+>
 > Si los valores de las variables contienen caracteres especiales (barras, pipes, ampersands), los comandos `sed` de sustitución pueden romperse. Los valores problemáticos para el delimitador `|` son los que contienen `|` literales; en la práctica los valores de hostname, usuario y puerto raramente los contienen, pero se debe verificar antes de ejecutar.
 
 #### A.2 Inventario de plantillas
 
-| Plantilla | Sección | Ruta destino | Variables |
-|---|---|---|---|
-| `plantilla-etc-hosts.txt` | 5.2 | `/etc/hosts` | `$MIHOST` |
-| `plantilla-etc-ssh-sshd_config.d-99-hardening.conf.txt` | 8.1 | `/etc/ssh/sshd_config.d/99-hardening.conf` | `$MIPUERTO`, `$MIUSUARIO` |
-| `plantilla-etc-fail2ban-jail.local.txt` | 10.2 | `/etc/fail2ban/jail.local` | `$MIPUERTO` |
-| `plantilla-etc-sysctl.d-99-hardening.conf.txt` | 11.1 | `/etc/sysctl.d/99-hardening.conf` | (sin variables) |
-| `plantilla-etc-modprobe.d-99-hardening.conf.txt` | 11.3 | `/etc/modprobe.d/99-hardening.conf` | (sin variables) |
-| `plantilla-etc-audit-rules.d-99-hardening.rules.txt` | 12.1 | `/etc/audit/rules.d/99-hardening.rules` | (sin variables) |
-| `plantilla-etc-cron.hourly-server-check.txt` | 17.2 | `/etc/cron.hourly/server-check` | (sin variables) |
-| `plantilla-etc-msmtprc.txt` | C.4 | `/etc/msmtprc` | `$MIRELAY`, `$MIPUERTO_SMTP` (shell) → `$MIPUERTO` (plantilla), `$MIUSUARIO_SMTP`, `$MIFROM` |
-| `plantilla-etc-msmtp-aliases.txt` | C.6 | `/etc/msmtp/aliases` | `$MIDESTINO` |
+| Plantilla                                               | Sección | Ruta destino                               | Variables                                                                                       |
+|---------------------------------------------------------|---------|--------------------------------------------|-------------------------------------------------------------------------------------------------|
+| `plantilla-etc-hosts.txt`                               | 5.2     | `/etc/hosts`                               | `$MIHOST`                                                                                       |
+| `plantilla-etc-ssh-sshd_config.d-99-hardening.conf.txt` | 8.1     | `/etc/ssh/sshd_config.d/99-hardening.conf` | `$MIPUERTO`, `$MIUSUARIO`                                                                       |
+| `plantilla-etc-fail2ban-jail.local.txt`                 | 10.2    | `/etc/fail2ban/jail.local`                 | `$MIPUERTO`                                                                                     |
+| `plantilla-etc-sysctl.d-99-hardening.conf.txt`          | 11.1    | `/etc/sysctl.d/99-hardening.conf`          | (sin variables)                                                                                 |
+| `plantilla-etc-modprobe.d-99-hardening.conf.txt`        | 11.3    | `/etc/modprobe.d/99-hardening.conf`        | (sin variables)                                                                                 |
+| `plantilla-etc-audit-rules.d-99-hardening.rules.txt`    | 12.1    | `/etc/audit/rules.d/99-hardening.rules`    | (sin variables)                                                                                 |
+| `plantilla-etc-cron.hourly-server-check.txt`            | 17.2    | `/etc/cron.hourly/server-check`            | (sin variables)                                                                                 |
+| `plantilla-etc-msmtprc.txt`                             | C.4     | `/etc/msmtprc`                             | `$MIRELAY`, `$MIPUERTO_SMTP` -> `$MIPUERTO` en plantilla, `$MIUSUARIO_SMTP`, `$MIFROM`          |
+| `plantilla-etc-msmtp-aliases.txt`                       | C.6     | `/etc/msmtp/aliases`                       | `$MIDESTINO`                                                                                    |
 
 #### A.3 Resumen de variables del manual
 
 A lo largo del manual se usan variables de entorno para personalizar las plantillas. Las más comunes son:
 
-| Variable | Significado | Ejemplo |
-|---|---|---|
-| `$MIHOST` | Hostname corto del servidor | `villonaco` |
-| `$MIUSUARIO` | Usuario administrativo | `usuario` |
-| `$MIPUERTO` | Puerto SSH personalizado (también usado por fail2ban) | `17177` |
-| `$MIRELAY` | Hostname del relay SMTP saliente | `smtp.gmail.com` |
-| `$MIPUERTO_SMTP` | Puerto SMTP del relay (Anexo C — distinto de `$MIPUERTO`) | `587` |
-| `$MIUSUARIO_SMTP` | Usuario para autenticarse contra el relay | `cuenta@dominio.com` |
-| `$MIFROM` | Dirección "From" autorizada en el relay | `cuenta@dominio.com` |
-| `$MIDESTINO` | Dirección externa donde llega el correo del sistema | `admin@dominio.com` |
-| `$SHA_COMMIT` | SHA del commit del repositorio de plantillas anclado | `a1b2c3d4...` (40 chars) |
-| `$ASSETS_BASE` | URL base para descarga de plantillas (derivada de `SHA_COMMIT`) | `https://raw.githubusercontent.com/.../assets` |
+| Variable          | Significado                                                       | Ejemplo                                       |
+|-------------------|-------------------------------------------------------------------|-----------------------------------------------|
+| `$MIHOST`         | Hostname corto del servidor                                       | `villonaco`                                   |
+| `$MIUSUARIO`      | Usuario administrativo                                            | `usuario`                                     |
+| `$MIPUERTO`       | Puerto SSH personalizado (también usado por fail2ban)             | `17177`                                       |
+| `$MIRELAY`        | Hostname del relay SMTP saliente                                  | `smtp.gmail.com`                              |
+| `$MIPUERTO_SMTP`  | Puerto SMTP del relay (Anexo C — distinto de `$MIPUERTO`)         | `587`                                         |
+| `$MIUSUARIO_SMTP` | Usuario para autenticarse contra el relay                         | `cuenta@dominio.com`                          |
+| `$MIFROM`         | Dirección "From" autorizada en el relay                           | `cuenta@dominio.com`                          |
+| `$MIDESTINO`      | Dirección externa donde llega el correo del sistema               | `admin@dominio.com`                           |
+| `$SHA_COMMIT`     | SHA del commit del repositorio de plantillas anclado              | `a1b2c3d4...` (40 chars)                      |
+| `$ASSETS_BASE`    | URL base para descarga de plantillas (derivada de `SHA_COMMIT`)   | `https://raw.githubusercontent.com/.../assets`|
 
 Conviene anotar los valores efectivos usados en este servidor concreto en el inventario del repositorio operativo (sección 19.1). Esto facilita reconstruir o auditar el servidor más adelante sin tener que adivinar qué se sustituyó en qué momento.
 
@@ -4514,16 +4525,16 @@ sudo journalctl -u systemd-journald --since "5 minutes ago"
 
 Errores comunes y su causa:
 
-| Mensaje en el log | Causa probable | Solución |
-|---|---|---|
-| `authentication failed (method LOGIN)` | Usuario o contraseña incorrectos | Verificar `/etc/msmtp/password` y el `user` en `/etc/msmtprc`. Si es Gmail, usar app password, no la contraseña normal. |
-| `basic authentication is disabled` | El relay rechaza auth básica (típico Microsoft 365) | Cambiar de relay o implementar XOAUTH2. Hotmail/Outlook personales requieren OAuth2. |
-| `connection refused` | Puerto o host incorrecto, o firewall bloqueando | Verificar `host` y `port` en `/etc/msmtprc`, probar `nc -vz <host> <puerto>` |
-| `sender address not allowed` | El `from` no está autorizado en el relay | Pedir al admin del relay que añada la dirección, o usar una autorizada |
-| `TLS handshake failed` | Certificado del relay no confiable | Verificar `tls_trust_file` (típicamente `/etc/ssl/certs/ca-certificates.crt`) |
-| `recipient address ... not a valid RFC 5321` | Destinatario sin `@dominio` y aliases mal configurados | Verificar `/etc/msmtp/aliases` y la directiva `aliases` en `/etc/msmtprc` |
-| `cannot log to /var/log/msmtp.log` | Logfile dedicado activado pero sin permisos | Comentar la línea `logfile` en `/etc/msmtprc` (la plantilla v1.1 ya viene así) |
-| `Permiso denegado` sobre `/etc/msmtp/aliases` con permisos POSIX correctos | Perfil AppArmor bloquea la lectura | Aplicar override de C.6.1 |
+| Mensaje en el log                                          | Causa probable                                          | Solución                                                                              |
+|------------------------------------------------------------|---------------------------------------------------------|---------------------------------------------------------------------------------------|
+| `authentication failed (method LOGIN)`                     | Usuario o contraseña incorrectos                        | Verificar `/etc/msmtp/password` y el `user`. En Gmail usar app password, no la real.  |
+| `basic authentication is disabled`                         | El relay rechaza auth básica (típico Microsoft 365)     | Cambiar de relay o implementar XOAUTH2. Hotmail/Outlook personales requieren OAuth2.  |
+| `connection refused`                                       | Puerto o host incorrecto, o firewall bloqueando         | Verificar `host` y `port` en `/etc/msmtprc`, probar `nc -vz <host> <puerto>`          |
+| `sender address not allowed`                               | El `from` no está autorizado en el relay                | Pedir al admin del relay que añada la dirección, o usar una autorizada                |
+| `TLS handshake failed`                                     | Certificado del relay no confiable                      | Verificar `tls_trust_file` (típicamente `/etc/ssl/certs/ca-certificates.crt`)         |
+| `recipient address ... not a valid RFC 5321`               | Destinatario sin `@dominio` y aliases mal configurados  | Verificar `/etc/msmtp/aliases` y la directiva `aliases` en `/etc/msmtprc`             |
+| `cannot log to /var/log/msmtp.log`                         | Logfile dedicado activado pero sin permisos             | Comentar la línea `logfile` en `/etc/msmtprc` (la plantilla v1.1 ya viene así)        |
+| `Permiso denegado` sobre `/etc/msmtp/aliases` (POSIX bien) | Perfil AppArmor bloquea la lectura                      | Aplicar override de C.6.1                                                             |
 
 #### C.10 Prueba de redirección de aliases
 
@@ -4642,4 +4653,4 @@ Aunque los permisos de `/var/log/msmtp.log` sean correctos, msmtp puede mostrar 
 
 ---
 
-<a href="https://github.com/noggalito/manuales/blob/main/sistemas-operativos/debian/13-server.md">Despliegue de Debian 13 Trixie server</a> © 2026 by <a href="https://github.com/calu777">Calú</a> is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
+[Despliegue de Debian 13 Trixie server](https://github.com/noggalito/manuales/blob/main/sistemas-operativos/debian/13-server.md) © 2026 by [Calú](https://github.com/calu777) is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)<img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
