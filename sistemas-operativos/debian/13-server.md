@@ -1,16 +1,18 @@
 # Despliegue de Debian 13 Trixie server
 
-Este documento describe las acciones necesarias para dejar listo un sistema Debian 13.5 Trixie server para las operaciones cotidianas, haciendo énfasis en la seguridad (hardening). El manual tiene un enfoque generalista, sirve como base para cualquier servidor, y como punto de partida. Luego, cada servidor específico deberá desplegar las acciones según su particularidad.
+Este documento describe las acciones necesarias para dejar listo un sistema Debian 13.6 Trixie server para las operaciones cotidianas, haciendo énfasis en la seguridad (hardening). El manual tiene un enfoque generalista, sirve como base para cualquier servidor, y como punto de partida. Luego, cada servidor específico deberá desplegar las acciones según su particularidad.
 
 <p style="text-align: center"><img src="./assets/logo debian.png" style="width: 25%;" alt="Debian" /></p>
 
 **Autor:** [Calú](https://github.com/calu777)  
 **Fecha de inicio:** 2026-04-19  
-**Última actualización:** 2026-05-20  
-**Versión:** 0.3
+**Última actualización:** 2026-07-14  
+**Versión:** 0.4
 
 ## a. Historial de cambios
 
+- [0.4] – 2026-07-14
+  - Actualización de Debian 13.5 a 13.6
 - [0.3] – 2026-05-20
   - Seguridad: URLs de plantillas migradas a SHA anclado + verificación sha256sum; nuevo hardening de sudo/pam_faillock; refuerzo SSH con   DisableForwarding; passphrase de Borg protegida con read -s.
   - Correcciones: SystemMaxUse de journald reducido a 1 G; nota sobre PASS_MIN_LEN ignorado con pam_pwquality; variable $MIPUERTO_SMTP para evitar colisión; LUKS2/Argon2id/GRUB aclarado; sed de dropbear reemplazado por secuencia robusta; fixes de numeración y typo.
@@ -265,7 +267,7 @@ Directorio de [netinst](https://cdimage.debian.org/debian-cd/current/amd64/bt-cd
 #### 1.1 Variables de trabajo
 
 ```bash
-DEBIAN_VER="13.5.0"
+DEBIAN_VER="13.6.0"
 DEBIAN_ARCH="amd64"
 ISO_NAME="debian-${DEBIAN_VER}-${DEBIAN_ARCH}-netinst.iso"
 WORKDIR="/tmp/iso-debian"
@@ -312,12 +314,12 @@ gpg --verify SHA512SUMS.sign SHA512SUMS
 Resultado esperado (la fecha variará según la publicación del release):
 
 ```
-gpg: Firmado el sáb 14 mar 2026 12:41:59 -05
-gpg:                usando RSA clave DF9B9C49EAA9298432589D76DA87E80D6294BE9B
-gpg: Firma correcta de "Debian CD signing key <debian-cd@lists.debian.org>" [desconocido]
-gpg: ATENCIÓN: ¡Esta clave no está certificada por una firma de confianza!
-gpg:          No hay indicios de que la firma pertenezca al propietario.
-Huellas dactilares de la clave primaria: DF9B 9C49 EAA9 2984 3258  9D76 DA87 E80D 6294 BE9B
+gpg: Signature made Sat Jul 11 15:25:53 2026 -05:00
+gpg:                using RSA key DF9B9C49EAA9298432589D76DA87E80D6294BE9B
+gpg: Good signature from "Debian CD signing key <debian-cd@lists.debian.org>" [unknown]
+gpg: WARNING: This key is not certified with a trusted signature!
+gpg:          There is no indication that the signature belongs to the owner.
+Primary key fingerprint: DF9B 9C49 EAA9 2984 3258  9D76 DA87 E80D 6294 BE9B
 ```
 
 > La advertencia "no está certificada por una firma de confianza" es normal y se resuelve manualmente comparando la huella con la web oficial (paso 1.2). Lo crítico es que diga "Firma correcta".
@@ -331,7 +333,7 @@ sha512sum --ignore-missing -c SHA512SUMS
 Resultado esperado:
 
 ```
-debian-13.5.0-amd64-netinst.iso: La suma coincide
+debian-13.6.0-amd64-netinst.iso: La suma coincide
 ```
 
 La opción `--ignore-missing` evita mensajes de error por las decenas de otras
@@ -3769,7 +3771,7 @@ El inventario mínimo para un servidor base incluye:
 | FQDN                         | `villonaco.lan`                                                     | `hostname -f`                              |
 | Rol                          | "Servidor base — sin rol específico aún"                            | manual / decisión del operador             |
 | Ubicación física / proveedor | "VM local en estación de trabajo del admin" / "VPS en Hetzner FSN1" | conocida por el operador                   |
-| Sistema operativo            | "Debian 13.5 Trixie"                                                | `cat /etc/os-release`                      |
+| Sistema operativo            | "Debian 13.6 Trixie"                                                | `cat /etc/os-release`                      |
 | IP de gestión                | `192.168.1.10/24`                                                   | `ip -brief address`                        |
 | Puerto SSH                   | `17177`                                                             | `/etc/ssh/sshd_config.d/99-hardening.conf` |
 | Usuario administrativo       | `usuario`                                                           | manual                                     |
