@@ -3399,6 +3399,9 @@ wget "${ASSETS_BASE}/plantilla-etc-cron.hourly-server-check.txt" \
 echo "<SHA256-ESPERADO>  /tmp/plantilla-etc-cron.hourly-server-check.txt" | sha256sum -c \
   || { echo "✗ ERROR: hash no coincide — NO instalar este script"; exit 1; }
 
+# Crar el directorio en caso que no exista
+sudo mkdir -p /etc/cron.hourly/
+
 sudo cp /tmp/plantilla-etc-cron.hourly-server-check.txt /etc/cron.hourly/server-check
 ```
 
@@ -4510,12 +4513,15 @@ id -G | tr ' ' '\n' | grep -q '^105$' && echo "ok" || echo "falta reconectar ses
 
 #### C.9 Prueba de envío directo
 
-Probar primero con un comando directo, antes de depender de la traducción de aliases:
+Probar primero con un envío directo vía `sendmail`, antes de depender de la traducción de aliases:
 
 ```bash
-echo "Mensaje de prueba directo desde $(hostname) a $(date)." | mail -s "Prueba de msmtp desde $(hostname)" admin@example.com
-```
+export MIDESTINO=admin@example.com
 
+printf 'To: %s\nSubject: Prueba de msmtp desde %s\n\nMensaje de prueba directo desde %s a %s.\n' \
+  "$MIDESTINO" "$(hostname)" "$(hostname)" "$(date)" \
+  | /usr/sbin/sendmail -t
+```
 Reemplazar `admin@example.com` por la dirección real de destino. Tras unos segundos, el mensaje debe llegar a esa dirección.
 
 Si el envío falla, las dos primeras fuentes a revisar son:
@@ -4543,7 +4549,8 @@ Errores comunes y su causa:
 Una vez verificado el envío directo, probar que la traducción de `root` a la dirección externa funciona:
 
 ```bash
-echo "Prueba de redirección de root a $(date)" | mail -s "Test redirección root" root
+printf 'To: root\nSubject: Test redirección root\n\nPrueba de redirección de root a %s\n' "$(date)" \
+  | /usr/sbin/sendmail -t
 ```
 
 Verificar en journald que se haya enviado a la dirección correcta:
