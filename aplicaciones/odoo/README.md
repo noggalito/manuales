@@ -2,7 +2,7 @@
 
 Este manual describe los pasos necesarios para desplegar Odoo Enterprise 19 en Debian 13 usando Docker + Docker Swarm, con PostgreSQL, volúmenes persistentes, *secrets* y soporte para módulos Enterprise montados. No existe una imagen oficial "Odoo Enterprise"; la forma soportada es usar la imagen oficial de Odoo y montar los addons Enterprise en `/mnt/extra-addons`. Antes de iniciar, debe estar instalado Debian 13.6 (Trixie) con todas las actualizaciones, y los puertos 80 y 443 abiertos en el firewall.
 
-<p style="text-align: center"><img src="./assets/odoo.svg" style="width: 25%;" alt="Odoo" /></p>
+<p style="text-align: center"><img src="../../assets/odoo.svg" style="width: 25%;" alt="Odoo" /></p>
 
 **Autor:** [Calú](https://github.com/calu777)  
 **Fecha de inicio:** 2026-07-22  
@@ -37,7 +37,7 @@ Seguir el método oficial (repositorio APT de Docker) para Debian 13:
 
 ```bash
 sudo apt update
-sudo apt install -y ca-certificates curl
+sudo apt install -y ca-certificates curl unzip
 
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
@@ -115,8 +115,10 @@ Usar un Personal Access Token (PAT) provisto por GitHub. También bajar los arch
 
 ```bash
 mkdir -p /tmp/odoo
-git clone https://github.com/calu777/v19 /tmp/odoo
-mv /tmp/odoo/src/* /opt/odoo19-docker/
+curl -L https://github.com/noggalito/manuales/archive/refs/heads/main.zip -o /tmp/odoo/manuales.zip
+unzip -q /tmp/odoo/manuales.zip -d /tmp/odoo
+cp -a /tmp/odoo/manuales-main/aplicaciones/odoo/assets/. /opt/odoo19-docker/
+rm -rf /tmp/odoo/
 ```
 
 Luego inicializa Swarm (single-node):
