@@ -121,7 +121,7 @@ cp -a /tmp/odoo/manuales-main/aplicaciones/odoo/assets/. /opt/odoo19-docker/
 rm -rf /tmp/odoo/
 ```
 
-Luego inicializa Swarm (single-node):
+Luego inicializar Swarm (single-node):
 
 ```bash
 IP=$(ip -4 route get 1.1.1.1 | awk '{for(i=1;i<=NF;i++) if ($i=="src") {print $(i+1); exit}}')
@@ -129,7 +129,7 @@ echo $IP
 sudo docker swarm init --advertise-addr "$IP"
 ```
 
-Comprueba:
+Comprobar:
 
 ```bash
 docker node ls
@@ -139,13 +139,13 @@ docker node ls
 
 ## 4. Crear el secret REAL para la contraseña de Postgres
 
-Crea una contraseña fuerte directamente sin dejarla en un archivo:
+Crear una contraseña fuerte directamente sin dejarla en un archivo:
 
 ```bash
 openssl rand -base64 32 | tr -d '\n' | docker secret create postgresql_password -
 ```
 
-Verifica:
+Verificar:
 
 ```bash
 docker secret ls
@@ -161,16 +161,16 @@ docker secret inspect postgresql_password
 
 ## 5. Crear imagen personalizada con las dependencias Python
 
-La imagen `odoo:19.0` no tiene las librerías necesarias para ciertos módulos Enterprise (como Contabilidad, Documentos, Firmas, etc.). Si intentas instalarlos sin esto, Odoo lanzará errores de "Module not found" o fallará silenciosamente. El archivo `Dockerfile` ya fue descargado en un Git previo, así que simplemente se debe construir la imagen localmente. Antes de desplegar el stack, debes "buildear" esta imagen en tu servidor.
+La imagen `odoo:19.0` no tiene las librerías necesarias para ciertos módulos Enterprise (como Contabilidad, Documentos, Firmas, etc.). Al intentar instalarlos sin esto, Odoo lanzará errores de "Module not found" o fallará silenciosamente. El archivo `Dockerfile` ya fue descargado previamente, así que simplemente se debe construir la imagen localmente. Antes de desplegar el stack, se debe "buildear" esta imagen en el servidor.
 
 ```bash
 # El punto final indica el directorio actual
 docker build -t odoo-enterprise:19.0 .
 ```
 
-## 5. Validar el archivo Swarm Stack: `stack.yml`
+## 6. Validar el archivo Swarm Stack: `stack.yml`
 
-El archivo ya está bajado en un Git previo. Toma en cuenta que:
+El archivo ya está bajado en una descarga previa. Tomar en cuenta que:
 
 * Odoo soporta `HOST/USER/PASSWORD` y también `PASSWORD_FILE` según la imagen oficial
 * Swarm monta los secrets en `/run/secrets/<nombre>` dentro del contenedor
@@ -184,9 +184,9 @@ docker compose -f stack.yml config
 En caso de ausencia de errores, el comando devuelve el archivo completo.
 
 
-## 6. Crear la configuración `config/odoo.conf`
+## 7. Crear la configuración `config/odoo.conf`
 
-La imagen oficial usa `/etc/odoo/odoo.conf` y permite sobrescribirlo montando volúmenes. El archivo ya está bajado en un Git previo; es necesario hacer los cambios de la contraseña u otros parámetros:
+La imagen oficial usa `/etc/odoo/odoo.conf` y permite sobrescribirlo montando volúmenes. El archivo ya está bajado en una descarga previa; es necesario hacer los cambios de la contraseña u otros parámetros:
 
 ```bash
 vi config/odoo.conf
@@ -208,7 +208,7 @@ En la imagen oficial de Odoo 19, el usuario odoo tiene UID 100 y GID 101 (verifi
 
 ---
 
-## 7. Desplegar el stack
+## 8. Desplegar el stack
 
 Desde `/opt/odoo19-docker`:
 
@@ -232,9 +232,24 @@ docker service logs -f odoo19_db
 
 ---
 
-## 8. Entrar a Odoo y habilitar Enterprise
+## 9. Entrar a Odoo y habilitar Enterprise
 
-Abre en navegador:
+Habilitar **temporalmente** el puerto 8069 sólo para la IP pública que accede remotamente. En la PC remota de instalación:
+
+```bash
+curl -s https://api.ipify.org
+```
+
+Y luego en el servidor:
+
+```bash
+export MI_IP=x.x.x.x # Ingresar la IP pública obtenida líneas arriba
+sudo ufw allow from "$MI_IP" to any port 8069 proto tcp comment 'Odoo temporal'
+sudo ufw show added
+sudo ufw enable
+```
+
+También habilitar el pueerto 8069 en el firewall. Luego, abrir en navegador:
 
 * `http://IP_DEL_SERVIDOR:8069`
 
@@ -246,19 +261,19 @@ Luego:
 
 ---
 
-## 9. Registrar tu base de datos con tu suscripción Enterprise
+## 10. Registrar tu base de datos con tu suscripción Enterprise
 
 En Odoo on-premise, registra la DB ingresando el **subscription code** en el banner del dashboard (cuando aparezca).
 
 Estos son los comandos típicos para ver logs:
 
-### 9.1 Ver servicios del stack
+### 10.1 Ver servicios del stack
 
 ```bash
 sudo docker stack services odoo19
 ```
 
-### 9.2 Logs del servicio (lo más común)
+### 10.2 Logs del servicio (lo más común)
 
 En vivo (follow):
 
@@ -280,14 +295,14 @@ Con timestamps:
 sudo docker service logs -f --timestamps odoo19_odoo
 ```
 
-### 9.3 Ver tareas (para saber si reinicia / falla)
+### 10.3 Ver tareas (para saber si reinicia / falla)
 
 ```bash
 sudo docker service ps odoo19_odoo
 sudo docker service ps odoo19_db
 ```
 
-### 9.4 Logs por contenedor (si `service logs` sale vacío)
+### 10.4 Logs por contenedor (si `service logs` sale vacío)
 
 Saca el container ID del task activo del servicio y míralo directo:
 
@@ -305,7 +320,7 @@ echo "$CID"
 sudo docker logs -f "$CID"
 ```
 
-### 9.5 Si estás escribiendo logs a archivo (bind mount)
+### 10.5 Si estás escribiendo logs a archivo (bind mount)
 
 Si montaste `/var/log/odoo`:
 
@@ -316,7 +331,7 @@ sudo tail -f /opt/odoo19-docker/logs/odoo.log
 
 ---
 
-## 10. Operación diaria útil (Swarm)
+## 11. Operación diaria útil (Swarm)
 
 Reiniciar Odoo (sin tumbar DB):
 
@@ -354,27 +369,27 @@ docker swarm leave --force
 
 ---
 
-## 11. Desplegar Caddy como *reverse proxy* seguro para exponer Odoo en Internet
+## 12. Desplegar Caddy como *reverse proxy* seguro para exponer Odoo en Internet
 
 En este paso vamos a colocar Caddy delante de Odoo como *reverse proxy* con HTTPS automático, de modo que:
 
 * El puerto 8069 no quede expuesto directamente a Internet.
 * Todo el tráfico pase por HTTPS con certificados gestionados automáticamente (Let's Encrypt u otra ACME CA).
-* Tengas *logs* y cabeceras de seguridad razonables por defecto.
+* Se cuente con *logs* y cabeceras de seguridad razonables por defecto.
 
-Este paso asume que ya tienes el *stack* `odoo19` funcionando, escuchando en `http://127.0.0.1:8069` y que en `odoo.conf` está activado `proxy_mode = True` (ya está en el archivo que preparamos).
+Este paso asume que se tiene el *stack* `odoo19` funcionando, escuchando en `http://127.0.0.1:8069` y que en `odoo.conf` está activado `proxy_mode = True` (ya está en el archivo que preparamos).
 
 ---
 
-### 11.1. Prerrequisitos
+### 12.1. Prerrequisitos
 
 1. **DNS apuntando al servidor**
 
-   Crea un registro DNS tipo **A** (o **AAAA** si usas IPv6) para tu dominio, por ejemplo:
+   Crea un registro DNS tipo **A** (o **AAAA** si se usa IPv6) para el dominio, por ejemplo:
 
-   *`dominio1.com` → IP pública de tu servidor Debian*
+   *`dominio1.com` → IP pública del servidor Debian*
 
-   Espera a que la propagación DNS funcione (un `ping dominio1.com` debe resolver a la IP de tu servidor).
+   Se debe esperar a que la propagación DNS funcione (un `ping dominio1.com` debe resolver a la IP del servidor).
 
 2. **Verificar que Odoo responde localmente**
 
@@ -384,12 +399,12 @@ Este paso asume que ya tienes el *stack* `odoo19` funcionando, escuchando en `ht
    curl -I http://127.0.0.1:8069
    ```
 
-   Debes ver un `HTTP/1.0 200 OK` o un `303 SEE OTHER` (redirección al login).
-   Si no responde, primero corrige tu despliegue del stack antes de seguir.
+   Se espera un `HTTP/1.0 200 OK` o un `303 SEE OTHER` (redirección al login).
+   Si no responde, primero corregir el despliegue del stack antes de seguir.
 
 ---
 
-### 11.2. Instalar Caddy en Debian 13
+### 12.2. Instalar Caddy en Debian 13
 
 Instalaremos Caddy desde el repositorio oficial para distribuciones derivadas de Debian, lo que te da actualizaciones y configuración vía `systemd`.
 
@@ -419,7 +434,7 @@ systemctl status caddy
 
 ---
 
-### 11.3. Preparar directorios de *logs*
+### 12.3. Preparar directorios de *logs*
 
 Por orden y para futuras auditorías, crea un directorio de *logs* específico con los permisos correctos para el usuario `caddy`:
 
@@ -433,7 +448,7 @@ sudo chmod 750 /var/log/caddy
 
 ---
 
-### 11.4. Configurar `/etc/caddy/Caddyfile` para Odoo
+### 12.4. Configurar `/etc/caddy/Caddyfile` para Odoo
 
 Edita el archivo principal de configuración:
 
@@ -469,10 +484,9 @@ dominio1.com {
     }
 
     # Websocket hacia el puerto evented de Odoo (gevent)
-    @websocket {
-        header Connection *Upgrade*
-        header Upgrade websocket
-    }
+   @websocket {
+       path /websocket
+   }
     reverse_proxy @websocket 127.0.0.1:8072
 
     # Proxy principal hacia Odoo
@@ -486,13 +500,13 @@ dominio1.com {
 >
 > * El matcher `@websocket` debe ir **antes** del `reverse_proxy` general. Caddy evalúa los matchers en orden y el proxy general capturaría las conexiones websocket si va primero, enviándolas al puerto 8069 (werkzeug) en lugar del 8072 (gevent), lo que causa `KeyError: 'socket'` en Odoo y satura los workers.
 >
-> * El bloque `@websocket` usa matching por header (`Connection: Upgrade` + `Upgrade: websocket`), no por path. El matching por `path /websocket` es insuficiente porque el navegador puede iniciar conexiones websocket en cualquier ruta.
+> * El bloque `@websocket` usa matching por path (`path /websocket`), no por header. El cliente de Odoo hace un GET inicial plano a /websocket sin cabeceras de upgrade, por lo que el matcher por header no lo detecta y el path-based matching es el que funciona de forma confiable.
 >
 > * La directiva `reverse_proxy` envía las cabeceras `X-Forwarded-*` automáticamente, que Odoo utiliza cuando `proxy_mode = True` está activo.
 
 ---
 
-### 11.5. Validar la configuración y aplicar
+### 12.5. Validar la configuración y aplicar
 
 Antes de recargar el servicio, formatea y valida que el Caddyfile es correcto:
 
@@ -527,7 +541,7 @@ curl -I https://dominio1.com
 
 ---
 
-### 11.6. Ajustar el firewall para seguridad
+### 12.6. Ajustar el firewall para seguridad
 
 Una vez que Caddy está en producción, sólo los puertos 80 y 443 deben ser accesibles desde Internet. Instala UFW y configura las reglas:
 
@@ -550,7 +564,7 @@ Con esto, cualquier cliente externo sólo podrá llegar a Odoo a través de Cadd
 
 ---
 
-### 11.7. Consideraciones adicionales de fiabilidad
+### 12.7. Consideraciones adicionales de fiabilidad
 
 1. **Revisar que Caddy está habilitado al arranque:**
 
@@ -582,11 +596,11 @@ Con esto, cualquier cliente externo sólo podrá llegar a Odoo a través de Cadd
 
 ---
 
-## 12. Agregar dominios adicionales (Odoo multiempresa)
+## 13. Agregar dominios adicionales (Odoo multiempresa)
 
 Odoo soporta múltiples sitios web, uno por empresa, cada uno con su propio dominio. Caddy identifica qué empresa servir basándose en el header `Host` que llega — no requiere ninguna configuración especial del lado de Odoo más allá de configurar el dominio en la app Sitio web.
 
-### 12.1. Prerrequisitos
+### 13.1. Prerrequisitos
 
 1. Haber creado la segunda empresa en Odoo y habilitado la app **Sitio web** para ella.
 2. En Odoo: **Sitio web → Configuración → Propiedades del sitio web** → campo **Dominio** con el valor `https://dominio2.com` (sin barra final).
@@ -606,7 +620,7 @@ Antes de cualquier cambio, respalda el archivo de configuración original:
 sudo cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.backup
 ```
 
-### 12.2. Agregar el bloque en el Caddyfile
+### 13.2. Agregar el bloque en el Caddyfile
 
 Edita `/etc/caddy/Caddyfile` y agrega un bloque nuevo con la misma estructura que el existente. El archivo completo debe quedar así:
 
@@ -632,10 +646,9 @@ dominio1.com {
 		X-Frame-Options "SAMEORIGIN"
 		Referrer-Policy "strict-origin-when-cross-origin"
 	}
-	@websocket {
-		header Connection *Upgrade*
-		header Upgrade websocket
-	}
+   @websocket {
+       path /websocket
+   }
 	reverse_proxy @websocket 127.0.0.1:8072
 	reverse_proxy 127.0.0.1:8069
 }
@@ -656,10 +669,9 @@ dominio2.com {
 		X-Frame-Options "SAMEORIGIN"
 		Referrer-Policy "strict-origin-when-cross-origin"
 	}
-	@websocket {
-		header Connection *Upgrade*
-		header Upgrade websocket
-	}
+   @websocket {
+       path /websocket
+   }
 	handle /media/* {
 		uri strip_prefix /media
 		root * /opt/archivos/noggalito.com
@@ -673,7 +685,7 @@ dominio2.com {
 
 > Cada bloque es independiente y Caddy obtiene un certificado TLS distinto para cada dominio automáticamente vía Let's Encrypt. No hay ningún cambio necesario en `odoo.conf`, en el stack de Docker ni en la red — Caddy pasa el header `Host` original al backend, que es lo que Odoo usa para el routing multiempresa.
 
-### 12.3. Validar y aplicar
+### 13.3. Validar y aplicar
 
 ```bash
 sudo caddy fmt --overwrite /etc/caddy/Caddyfile
@@ -708,7 +720,7 @@ sudo ufw delete allow 8069/tcp
 sudo ufw status numbered
 ```
 
-### 12.4. Redirección www (opcional)
+### 13.4. Redirección www (opcional)
 
 Si también apuntaste `www.dominio2.com` a la misma IP, agrega un bloque de redirección:
 
@@ -718,7 +730,7 @@ www.dominio2.com {
 }
 ```
 
-### 12.5. Cómo funciona internamente
+### 13.5. Cómo funciona internamente
 
 ```
 Navegador → https://dominio2.com
@@ -729,7 +741,7 @@ Navegador → https://dominio2.com
 
 ---
 
-## 13. Mini servidor de archivos
+## 14. Mini servidor de archivos
 
 La forma más simple es hacerlo directamente con Caddy, sin tocar Odoo, agregando un bloque `file_server` en el Caddyfile.
 
@@ -1350,8 +1362,8 @@ sudo rm -rf ${MOUNTPOINT_DESTINO}/filestore/${NOMBRE_BD}/
 El conteo de archivos no detecta archivos vacíos (0 bytes) ni adjuntos registrados en la BD que apuntan a archivos inexistentes en el filestore. Una vez que Odoo esté levantado (tras el paso 6.5), corre esta verificación para detectar desajustes entre `ir_attachment.store_fname` y el filestore físico:
 
 ```bash
-CID_DB=$(sudo docker ps -q --filter label=com.docker.swarm.service.name=STACK_DESTINO_db | head -n1)
-CID_ODOO=$(sudo docker ps -q --filter label=com.docker.swarm.service.name=STACK_DESTINO_odoo | head -n1)
+CID_DB=$(sudo docker ps -q --filter label=com.docker.swarm.service.name=${STACK_DESTINO}_db | head -n1)
+CID_ODOO=$(sudo docker ps -q --filter label=com.docker.swarm.service.name=${STACK_DESTINO}_odoo | head -n1)
 
 sudo docker exec $CID_DB psql -U $USUARIO_PG -d $NOMBRE_BD -tAc "
 SELECT store_fname FROM ir_attachment 
@@ -1614,6 +1626,7 @@ curl -vI https://DOMINIO 2>&1 | grep -E "subject|issuer|expire"
 * /etc/caddy/Caddyfile
 * /opt/archivos
 * /opt/odoo19-docker/config/odoo.conf
+* /var/log/caddy
 ---
 
-[Despliegue de Odoo 19 Enterprise](https://github.com/noggalito/manuales/blob/main/sistemas-operativos/debian/13-server.md) © 2026 by [Calú](https://github.com/calu777) is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)<img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
+[Despliegue de Odoo 19 Enterprise](https://github.com/noggalito/manuales/tree/main/aplicaciones/odoo) © 2026 by [Calú](https://github.com/calu777) is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)<img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
