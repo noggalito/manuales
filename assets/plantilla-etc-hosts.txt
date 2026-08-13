@@ -1,9 +1,9 @@
-# Plantilla de /etc/hosts v1.0
-# Se requiere definir la variable MIHOST
+# Plantilla de /etc/hosts v1.1
+# Se requieren las variables MIHOST (nombre corto) y MIFQDN (nombre completo)
 # Sintaxis: IP  nombre-canónico  [alias ...]
 
 # ── Loopback IPv4 ──────────────────────────────────────────
-127.0.0.1       localhost $MIHOST
+127.0.0.1       localhost
 
 # ── Loopback IPv6 ──────────────────────────────────────────
 ::1             localhost ip6-localhost ip6-loopback
@@ -16,7 +16,7 @@ ff02::2         ip6-allrouters
 ff02::3         ip6-allhosts
 
 # ── Nombre del equipo (FQDN primero, luego hostname corto) ──
-127.0.1.1       $MIHOST.lan  $MIHOST
+127.0.1.1       $MIFQDN  $MIHOST
 # <192.168.1.2> <FQDN> <HOSTNAME> [alias1] [alias2 ...]
 
 # ── Hosts de red local ──────────────────────────────────────

@@ -6,11 +6,15 @@ Este documento describe las acciones necesarias para dejar listo un sistema Debi
 
 **Autor:** [Calú](https://github.com/calu777)  
 **Fecha de inicio:** 2026-04-19  
-**Última actualización:** 2026-07-14  
-**Versión:** 0.4
+**Última actualización:** 2026-09-12  
+**Versión:** 0.6
 
 ## a. Historial de cambios
 
+- [0.6] – 2026-09-12
+  - Arreglos menores en la plantilla `/etc/hosts` del apartado §5.2
+- [0.5] – 2026-07-24
+  - Modificación de las variables `ALLOW_SSH_ROOT_USER=unset` y `ALLOW_SSH_PROT_V1=2` en el apartado §12.2
 - [0.4] – 2026-07-14
   - Actualización de Debian 13.5 a 13.6
 - [0.3] – 2026-05-20
@@ -890,8 +894,9 @@ El archivo `/etc/hosts` debe reflejar el hostname para que resoluciones locales 
 # Respaldar el archivo original
 sudo cp /etc/hosts /etc/hosts.ori
 
-# Definir la variable $MIHOST
+# Definir las variables $MIHOST y $MIFQDN
 export MIHOST=villonaco
+export MIFQDN=villonaco.ejemplo.com
 
 # Descargar la plantilla (requiere SHA_COMMIT y ASSETS_BASE definidos según §A.1.1)
 wget "${ASSETS_BASE}/plantilla-etc-hosts.txt" -O /tmp/plantilla-etc-hosts.txt
@@ -901,7 +906,8 @@ echo "<SHA256-ESPERADO>  /tmp/plantilla-etc-hosts.txt" | sha256sum -c \
   || { echo "✗ ERROR: hash no coincide — NO aplicar este archivo"; exit 1; }
 
 # Reemplazar variables y generar el archivo en destino
-sed "s/\$MIHOST/$MIHOST/g" /tmp/plantilla-etc-hosts.txt | sudo tee /etc/hosts > /dev/null
+sed -e "s/\$MIFQDN/$MIFQDN/g" -e "s/\$MIHOST/$MIHOST/g" \
+    /tmp/plantilla-etc-hosts.txt | sudo tee /etc/hosts > /dev/null
 ```
 
 Es probable que la terminal arroje un error como: `sudo: unable to resolve host villonaco: Nombre o servicio desconocido`, sin embargo se debe omitir ese mensaje y avanzar.
@@ -2325,8 +2331,8 @@ sudo apt install -y rkhunter
 # Crear/agregar overrides locales
 sudo tee -a /etc/rkhunter.conf.local > /dev/null <<'EOF'
 # Override: PermitRootLogin está en sshd_config.d/99-hardening.conf
-ALLOW_SSH_ROOT_USER=no
-ALLOW_SSH_PROT_V1=0
+ALLOW_SSH_ROOT_USER=unset
+ALLOW_SSH_PROT_V1=2
 
 # Whitelist de archivos ocultos legítimos del sistema
 ALLOWHIDDENFILE=/etc/.updated
@@ -2442,9 +2448,9 @@ sudo ls -la /var/lib/aide/
 Salida esperada, los permisos restrictivos son parte del hardening:
 
 ```
-drwx------  2 _aide root      4096 Apr 26 23:12 .
-drwxr-xr-x 28 root  root      4096 Apr 26 23:11 ..
--rw-------  1 _aide _aide 14111274 Apr 26 23:12 aide.db
+drwx------  2 _aide root      4096 jul 24 21:57 .
+drwxr-xr-x 28 root  root      4096 jul 24 21:56 ..
+-rw-------  1 _aide _aide 14254945 jul 24 21:57 aide.db
 ```
 
 El directorio y el archivo pertenecen al usuario de sistema `_aide` (sin shell de login) con permisos `700` y `600` respectivamente. Solo `_aide` y `root` pueden acceder.
@@ -3985,7 +3991,7 @@ echo "ASSETS_BASE = ${ASSETS_BASE}"
 
 | Plantilla                                               | Sección | Ruta destino                               | Variables                                                                                       |
 |---------------------------------------------------------|---------|--------------------------------------------|-------------------------------------------------------------------------------------------------|
-| `plantilla-etc-hosts.txt`                               | 5.2     | `/etc/hosts`                               | `$MIHOST`                                                                                       |
+| `plantilla-etc-hosts.txt`                               | 5.2     | `/etc/hosts`                               | `$MIHOST`, `$MIFQDN`                                                                                        |
 | `plantilla-etc-ssh-sshd_config.d-99-hardening.conf.txt` | 8.1     | `/etc/ssh/sshd_config.d/99-hardening.conf` | `$MIPUERTO`, `$MIUSUARIO`                                                                       |
 | `plantilla-etc-fail2ban-jail.local.txt`                 | 10.2    | `/etc/fail2ban/jail.local`                 | `$MIPUERTO`                                                                                     |
 | `plantilla-etc-sysctl.d-99-hardening.conf.txt`          | 11.1    | `/etc/sysctl.d/99-hardening.conf`          | (sin variables)                                                                                 |
@@ -4002,6 +4008,7 @@ A lo largo del manual se usan variables de entorno para personalizar las plantil
 | Variable          | Significado                                                       | Ejemplo                                       |
 |-------------------|-------------------------------------------------------------------|-----------------------------------------------|
 | `$MIHOST`         | Hostname corto del servidor                                       | `villonaco`                                   |
+| `$MIFQDN`         | Nombre completo / FQDN del servidor                                     | `villonaco.ejemplo.com`                                   |
 | `$MIUSUARIO`      | Usuario administrativo                                            | `usuario`                                     |
 | `$MIPUERTO`       | Puerto SSH personalizado (también usado por fail2ban)             | `17177`                                       |
 | `$MIRELAY`        | Hostname del relay SMTP saliente                                  | `smtp.gmail.com`                              |
